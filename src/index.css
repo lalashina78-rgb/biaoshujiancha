@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --color-brand: #125FFA;
+  --color-brand-dark: #0A47C7;
+  --color-brand-light: #E6EFFF;
+  --color-text-primary: #1A1C24;
+  --color-text-secondary: #3D3D3D;
+  --color-text-tertiary: #6B6B6B;
+  --color-functional-success: #3CB230;
+  --color-functional-warning: #E98200;
+  --color-functional-error: #E4231D;
+  --color-bg-page: #F5F7FA;
+  --color-bg-card: #FFFFFF;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: var(--color-bg-page);
+  color: var(--color-text-primary);
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9DCDF;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B0B5BA;
+}
+
+/* Custom animations */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-progress-indeterminate {
+  animation: progress-indeterminate 1.5s infinite linear;
+}
+
+/* Custom scrollbar for dark mode (logs) */
+.custom-scrollbar-dark::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar-dark::-webkit-scrollbar-track {
+  background: #111827; /* gray-900 */
+}
+.custom-scrollbar-dark::-webkit-scrollbar-thumb {
+  background: #374151; /* gray-700 */
+  border-radius: 3px;
+}
+.custom-scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background: #4B5563; /* gray-600 */
+}
