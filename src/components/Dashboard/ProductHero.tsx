@@ -10,7 +10,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ onCreateClick }) => {
     {
       icon: <Bot size={20} className="text-blue-600" />,
       title: 'AI技术标评审',
-      desc: '自动解析评分标准，模拟评审生成报告'
+      desc: '自动解析响应标准，模拟评审生成报告'
     },
     {
       icon: <FileCheck size={20} className="text-green-600" />,
@@ -25,7 +25,7 @@ export const ProductHero: React.FC<ProductHeroProps> = ({ onCreateClick }) => {
     {
       icon: <RefreshCw size={20} className="text-purple-600" />,
       title: '一键优化重评',
-      desc: '提供优化建议，支持修改后重新评分'
+      desc: '提供优化建议，支持修改后重新匹配'
     }
   ];
 

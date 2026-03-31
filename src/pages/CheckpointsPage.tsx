@@ -274,16 +274,16 @@ export const CheckpointsPage: React.FC = () => {
                 <section>
                   <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                     <span className="w-1.5 h-4 bg-gray-800 block"></span>
-                    2. 详细评分标准
+                    2. 详细响应标准
                   </h3>
                   
                   <div className="pl-4 mb-6">
-                    <h4 className="font-bold mb-3 text-base">2.1 技术标评分细则（40分）</h4>
+                    <h4 className="font-bold mb-3 text-base">2.1 技术标响应细则（40分）</h4>
                     <table className="w-full border-collapse border border-gray-400 text-xs">
                       <thead>
                         <tr className="bg-gray-100">
                           <th className="border border-gray-400 p-3 text-left w-1/5">评审项目</th>
-                          <th className="border border-gray-400 p-3 text-left">评审标准与得分依据</th>
+                          <th className="border border-gray-400 p-3 text-left">响应标准与匹配依据</th>
                           <th className="border border-gray-400 p-3 text-center w-16">分值</th>
                         </tr>
                       </thead>

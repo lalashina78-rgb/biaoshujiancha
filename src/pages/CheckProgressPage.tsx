@@ -43,7 +43,7 @@ const TECHNICAL_PHASES: ProgressPhase[] = [
   { 
     id: 'phase2', 
     label: '规则匹配', 
-    description: '基于评分标准进行全量响应点匹配',
+    description: '基于响应标准进行全量响应点匹配',
     icon: <Cpu size={18} />
   },
   { 
@@ -58,7 +58,7 @@ const CREDIT_PHASES: ProgressPhase[] = [
   { 
     id: 'phase1', 
     label: '要素提取', 
-    description: '提取招标文件中的资信评分标准',
+    description: '提取招标文件中的资信响应标准',
     icon: <BookOpen size={18} />
   },
   { 
@@ -70,7 +70,7 @@ const CREDIT_PHASES: ProgressPhase[] = [
   { 
     id: 'phase3', 
     label: '结果汇总', 
-    description: '计算资信得分并生成合规性报告',
+    description: '计算资信匹配度并生成合规性报告',
     icon: <FileCheck size={18} />
   }
 ];
@@ -91,7 +91,7 @@ export const CheckProgressPage: React.FC = () => {
       return [
         { id: 'phase1', label: '文件读取', description: '加载并解析PDF文件流', icon: <Search size={18} /> },
         { id: 'phase2', label: '结构识别', description: '识别文档目录与章节层级', icon: <BookOpen size={18} /> },
-        { id: 'phase3', label: '关键点提取', description: '提取评分相关的关键信息点', icon: <FileSearch size={18} /> }
+        { id: 'phase3', label: '关键点提取', description: '提取响应相关的关键信息点', icon: <FileSearch size={18} /> }
       ];
     }
     return isCredit ? CREDIT_PHASES : TECHNICAL_PHASES;
@@ -125,15 +125,15 @@ export const CheckProgressPage: React.FC = () => {
       setStatus('phase2');
       addLog('第一阶段解析完成', 'success');
       addLog('进入深度匹配阶段...', 'info');
-      addLog('正在比对评分标准与响应内容...', 'info');
+      addLog('正在比对响应标准与响应内容...', 'info');
       addLog('发现 3 个潜在风险项', 'warning');
-      addLog('正在计算分项得分...', 'info');
+      addLog('正在计算分项匹配度...', 'info');
     }, 4000);
 
     const timer3 = setTimeout(() => {
       setProgress(90);
       setStatus('phase3');
-      addLog('评分计算完成', 'success');
+      addLog('匹配度计算完成', 'success');
       addLog('正在生成最终报告...', 'info');
       addLog('汇总风险提示与优化建议...', 'info');
     }, 7500);

@@ -36,7 +36,7 @@ const MOCK_DETAIL: ScoringPointDetail = {
     '增加雨季与赶工专项方案（触发条件、组织措施、资源增配与节点调整方式），并在甘特图中体现调整预案。'
   ],
   requirements: '施工进度计划应完整、可执行，明确关键线路与里程碑节点；进度安排需与项目工期要求一致，并提供相应的资源保障措施（人员、设备、材料）及赶工/风险应对方案。',
-  requirementSource: '招标文件《技术标评分细则》- “施工组织设计”部分 - 评分点：施工进度计划合理性。P232',
+  requirementSource: '招标文件《技术标响应细则》- “施工组织设计”部分 - 响应点：施工进度计划合理性。P232',
   responseContent: '• 总工期：180日历天（满足招标文件要求180日历天）。\n• 关键线路：测量放线→土方开挖→基础施工→主体结构→机电安装→装饰装修→系统调试→竣工验收。\n• 里程碑节点：\n  1）第30天：完成基础施工；\n  2）第90天：完成主体结构封顶；\n  3）第150天：完成机电安装及装饰装修；\n  4）第175天：完成系统联调；\n  5）第180天：完成竣工验收移交。\n• 资源保障：高峰期投入管理人员12人、劳务工人约80人，配置塔吊1台、挖机2台、混凝土泵1台；雨季采用“分区流水+夜间赶工”方式确保节点。',
   responseSource: '投标文件《施工组织设计》- 第4章《施工进度计划及保证措施》- 4.1《总体进度安排》、4.2《关键线路与里程碑》；甘特图见P56-P58'
 };
@@ -54,24 +54,6 @@ export const ScoringPointDetailPage: React.FC = () => {
     return <div className="p-8 text-center">项目不存在</div>;
   }
 
-  const getRiskColor = (level: RiskLevel) => {
-    switch (level) {
-      case 'high': return 'text-functional-error bg-red-50 border-red-100';
-      case 'medium': return 'text-orange-600 bg-orange-50 border-orange-100';
-      case 'low': return 'text-yellow-600 bg-yellow-50 border-yellow-100';
-      default: return 'text-gray-500 bg-gray-50 border-gray-100';
-    }
-  };
-
-  const getRiskLabel = (level: RiskLevel) => {
-    switch (level) {
-      case 'high': return '高风险';
-      case 'medium': return '中风险';
-      case 'low': return '低风险';
-      default: return '无风险';
-    }
-  };
-
   const handleCopy = () => {
     const text = MOCK_DETAIL.deductionReasons.join('\n');
     navigator.clipboard.writeText(text);
@@ -83,15 +65,15 @@ export const ScoringPointDetailPage: React.FC = () => {
     <div className="flex flex-col h-full w-full max-w-[1400px] mx-auto space-y-6 pb-12 p-6">
       {/* 顶部栏/导航 */}
       <PageHeader
-        title="评分点详情"
+        title="响应点详情"
         breadcrumbs={[
-          { label: '评分总览', onClick: () => navigate(`/projects/${id}/check-result`) },
-          { label: '评分点详情' }
+          { label: '响应总览', onClick: () => navigate(`/projects/${id}/check-result`) },
+          { label: '响应点详情' }
         ]}
         onBack={() => navigate(`/projects/${id}/check-result`)}
       />
 
-      {/* 评分结果概览区 */}
+      {/* 响应结果概览区 */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -112,15 +94,16 @@ export const ScoringPointDetailPage: React.FC = () => {
               </h2>
               <div className="flex items-center gap-3 mt-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm text-gray-500">得分：</span>
-                  <span className="text-lg font-bold text-gray-900">{MOCK_DETAIL.score}</span>
-                  <span className="text-sm text-gray-400">/ {MOCK_DETAIL.maxScore}</span>
-                </div>
-                <div className={cn(
-                  "px-2 py-0.5 rounded text-xs font-bold border",
-                  getRiskColor(MOCK_DETAIL.riskLevel)
-                )}>
-                  {getRiskLabel(MOCK_DETAIL.riskLevel)}
+                  <span className="text-sm text-gray-500">匹配度：</span>
+                  <span className={cn(
+                    "text-lg font-bold",
+                    Math.round((MOCK_DETAIL.score / MOCK_DETAIL.maxScore * 100) / 10) * 10 <= 30 ? "text-red-600" :
+                    Math.round((MOCK_DETAIL.score / MOCK_DETAIL.maxScore * 100) / 10) * 10 <= 60 ? "text-orange-600" :
+                    Math.round((MOCK_DETAIL.score / MOCK_DETAIL.maxScore * 100) / 10) * 10 <= 80 ? "text-yellow-600" :
+                    "text-green-600"
+                  )}>
+                    {Math.round((MOCK_DETAIL.score / MOCK_DETAIL.maxScore * 100) / 10) * 10}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -139,7 +122,7 @@ export const ScoringPointDetailPage: React.FC = () => {
         <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
           <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
             <AlertCircle size={16} className="text-orange-500" />
-            扣分原因说明
+            差异原因说明
           </h3>
           <button 
             onClick={handleCopy}
@@ -164,7 +147,7 @@ export const ScoringPointDetailPage: React.FC = () => {
           <div className="pt-4 border-t border-gray-100">
             <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Lightbulb size={16} className="text-brand" />
-              评分建议
+              优化建议
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {MOCK_DETAIL.suggestions.map((suggestion, index) => (
@@ -183,12 +166,12 @@ export const ScoringPointDetailPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 评分要求区 */}
+        {/* 响应要求区 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col">
           <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/30">
             <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
               <BookOpen size={16} className="text-brand" />
-              评分要求
+              响应要求
             </h3>
           </div>
           <div className="p-6 flex-1 flex flex-col">

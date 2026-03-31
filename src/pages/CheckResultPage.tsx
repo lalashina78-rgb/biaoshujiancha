@@ -29,7 +29,7 @@ const MOCK_SCORING_RESULT: ScoringResult = {
   totalScore: 85.5,
   maxTotalScore: 100,
   riskLevel: 'medium',
-  riskMessage: '存在中风险评分项：部分评分点得分较低，建议查看扣分原因。',
+  riskMessage: '技术标的响应不完整，部分响应点匹配度较低，建议查看差异原因。',
   categories: [
     { category: '施工组织', score: 22, maxScore: 25 },
     { category: '施工进度', score: 18, maxScore: 20 },
@@ -205,7 +205,8 @@ export const CheckResultPage: React.FC = () => {
 
   // Technical Check States
   const [activeCategory, setActiveCategory] = useState<string>('全部');
-  const [filterType, setFilterType] = useState<'all' | 'risk' | 'deduction' | 'full'>('risk');
+  const [filterType, setFilterType] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Credit Check States
   const [viewMode, setViewMode] = useState<'list' | 'file'>('list');
@@ -323,14 +324,14 @@ export const CheckResultPage: React.FC = () => {
 
     // Filter by type
     switch (filterType) {
-      case 'risk':
-        result = result.filter(p => p.riskLevel === 'high' || p.riskLevel === 'medium');
+      case 'high':
+        result = result.filter(p => p.riskLevel === 'high');
         break;
-      case 'deduction':
-        result = result.filter(p => p.score < p.maxScore);
+      case 'medium':
+        result = result.filter(p => p.riskLevel === 'medium');
         break;
-      case 'full':
-        result = result.filter(p => p.score === p.maxScore);
+      case 'low':
+        result = result.filter(p => p.riskLevel === 'low');
         break;
       default:
         break;
@@ -349,24 +350,6 @@ export const CheckResultPage: React.FC = () => {
   if (!project) {
     return <div className="p-8 text-center">项目不存在</div>;
   }
-
-  const getRiskColor = (level: RiskLevel) => {
-    switch (level) {
-      case 'high': return 'text-functional-error bg-red-50 border-red-100';
-      case 'medium': return 'text-orange-600 bg-orange-50 border-orange-100';
-      case 'low': return 'text-yellow-600 bg-yellow-50 border-yellow-100';
-      default: return 'text-gray-500 bg-gray-50 border-gray-100';
-    }
-  };
-
-  const getRiskLabel = (level: RiskLevel) => {
-    switch (level) {
-      case 'high': return '高风险';
-      case 'medium': return '中风险';
-      case 'low': return '低风险';
-      default: return '无风险';
-    }
-  };
 
   const chartData = MOCK_SCORING_RESULT.categories.map(c => ({
     subject: c.category,
@@ -395,7 +378,7 @@ export const CheckResultPage: React.FC = () => {
 
     return (
       <div className="flex-1 overflow-y-auto space-y-6 pr-2 pb-6">
-        {/* 评分汇总与图表 */}
+        {/* 响应汇总与图表 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div className="relative w-32 h-32 flex items-center justify-center">
@@ -428,19 +411,27 @@ export const CheckResultPage: React.FC = () => {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-gray-900">{MOCK_SCORING_RESULT.totalScore}</span>
-                <span className="text-xs text-gray-400 font-medium">/ {MOCK_SCORING_RESULT.maxTotalScore} 分</span>
+                <span className={cn(
+                  "text-3xl font-bold",
+                  Math.round((MOCK_SCORING_RESULT.totalScore / MOCK_SCORING_RESULT.maxTotalScore * 100) / 10) * 10 <= 30 ? "text-red-600" :
+                  Math.round((MOCK_SCORING_RESULT.totalScore / MOCK_SCORING_RESULT.maxTotalScore * 100) / 10) * 10 <= 60 ? "text-orange-600" :
+                  Math.round((MOCK_SCORING_RESULT.totalScore / MOCK_SCORING_RESULT.maxTotalScore * 100) / 10) * 10 <= 80 ? "text-yellow-600" :
+                  "text-green-600"
+                )}>
+                  {Math.round((MOCK_SCORING_RESULT.totalScore / MOCK_SCORING_RESULT.maxTotalScore * 100) / 10) * 10}%
+                </span>
+                <span className="text-xs text-gray-400 font-medium">总体匹配度</span>
               </div>
             </div>
             
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-gray-900">技术标总分</h2>
-                <span className="text-sm text-gray-400">(满分 {MOCK_SCORING_RESULT.maxTotalScore} 分)</span>
+                <h2 className="text-xl font-bold text-gray-900">技术标响应匹配度</h2>
+                <span className="text-sm text-gray-400">(满分 100%)</span>
               </div>
               <div className="flex items-center gap-2 p-3 bg-orange-50 rounded-xl border border-orange-100 text-sm text-orange-600">
                 <AlertTriangle size={16} className="shrink-0" />
-                <p>存在中风险评分项：部分评分点得分较低，建议查看扣分原因。</p>
+                <p>技术标的响应不完整，部分响应点匹配度较低，建议查看差异原因。</p>
               </div>
             </div>
           </div>
@@ -456,7 +447,7 @@ export const CheckResultPage: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
             <h3 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-6">
               <BarChart2 size={18} className="text-brand" />
-              分类得分分布
+              分类匹配度分布
             </h3>
             <div className="flex-1 min-h-[250px] mb-6">
               <ResponsiveContainer width="100%" height="100%">
@@ -464,7 +455,7 @@ export const CheckResultPage: React.FC = () => {
                   <PolarGrid stroke="#f3f4f6" />
                   <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 500 }} />
                   <Radar
-                    name="得分率"
+                    name="匹配度"
                     dataKey="A"
                     stroke="#3b82f6"
                     fill="#3b82f6"
@@ -472,7 +463,7 @@ export const CheckResultPage: React.FC = () => {
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                    formatter={(value: number) => [`${value.toFixed(1)}%`, '得分率']}
+                    formatter={(value: number) => [`${value.toFixed(1)}%`, '匹配度']}
                   />
                 </RadarChart>
               </ResponsiveContainer>
@@ -483,7 +474,15 @@ export const CheckResultPage: React.FC = () => {
                 <div key={cat.category} className="flex flex-col gap-2">
                   <div className="flex items-center justify-between text-sm font-bold">
                     <span className="text-gray-700">{cat.category}</span>
-                    <span className="text-gray-900">{cat.score} / {cat.maxScore}</span>
+                    <span className={cn(
+                      "text-gray-900",
+                      Math.round((cat.score / cat.maxScore * 100) / 10) * 10 <= 30 ? "text-red-600" :
+                      Math.round((cat.score / cat.maxScore * 100) / 10) * 10 <= 60 ? "text-orange-600" :
+                      Math.round((cat.score / cat.maxScore * 100) / 10) * 10 <= 80 ? "text-yellow-600" :
+                      "text-green-600"
+                    )}>
+                      {Math.round((cat.score / cat.maxScore * 100) / 10) * 10}%
+                    </span>
                   </div>
                   <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                     <div 
@@ -501,24 +500,24 @@ export const CheckResultPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 详细评分列表 */}
+          {/* 详细响应列表 */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
             <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <LayoutList size={18} className="text-brand" />
-                详细评分清单
+                详细响应清单
               </h3>
               <div className="relative w-64">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input 
                   type="text" 
-                  placeholder="搜索评分点..." 
+                  placeholder="搜索响应点..." 
                   className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
                 />
               </div>
             </div>
             
-            <div className="px-6 pt-4 border-b border-gray-50">
+            <div className="px-6 pt-4 border-b border-gray-50 flex items-center justify-between">
               <div className="flex items-center gap-6 overflow-x-auto no-scrollbar">
                 {categories.map(cat => (
                   <button
@@ -533,46 +532,52 @@ export const CheckResultPage: React.FC = () => {
                   </button>
                 ))}
               </div>
-            </div>
 
-            <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-4 bg-gray-50/30">
-              <button 
-                onClick={() => setFilterType('all')}
-                className={cn(
-                  "text-sm font-bold transition-all",
-                  filterType === 'all' ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
+              <div className="relative pb-4">
+                <button 
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-all"
+                >
+                  <Filter size={14} className="text-gray-400" />
+                  <span>
+                    {filterType === 'all' ? '全部风险' : 
+                     filterType === 'high' ? '高风险' : 
+                     filterType === 'medium' ? '中风险' : '低风险'}
+                  </span>
+                  <ChevronDown size={14} className={cn("text-gray-400 transition-transform", isFilterOpen && "rotate-180")} />
+                </button>
+
+                {isFilterOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setIsFilterOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-20">
+                      {[
+                        { id: 'all', label: '全部' },
+                        { id: 'high', label: '高风险' },
+                        { id: 'medium', label: '中风险' },
+                        { id: 'low', label: '低风险' }
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => {
+                            setFilterType(opt.id as any);
+                            setIsFilterOpen(false);
+                          }}
+                          className={cn(
+                            "w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50",
+                            filterType === opt.id ? "text-brand font-bold bg-brand/5" : "text-gray-600"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
-              >
-                全部
-              </button>
-              <button 
-                onClick={() => setFilterType('risk')}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold transition-all border",
-                  filterType === 'risk' ? "bg-white text-gray-900 border-gray-200 shadow-sm" : "text-gray-500 border-transparent hover:text-gray-700"
-                )}
-              >
-                风险项
-                <span className="px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 text-[10px]">5</span>
-              </button>
-              <button 
-                onClick={() => setFilterType('deduction')}
-                className={cn(
-                  "text-sm font-bold transition-all",
-                  filterType === 'deduction' ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                扣分项
-              </button>
-              <button 
-                onClick={() => setFilterType('full')}
-                className={cn(
-                  "text-sm font-bold transition-all",
-                  filterType === 'full' ? "text-gray-900" : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                满分项
-              </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -593,22 +598,15 @@ export const CheckResultPage: React.FC = () => {
                   
                   <div className="flex items-center gap-8 ml-6 shrink-0">
                     <div className="flex flex-col items-end">
-                      <div className="text-lg font-bold text-gray-900">
-                        {point.score} <span className="text-gray-400 text-sm font-medium">/ {point.maxScore}</span>
+                      <div className={cn(
+                        "text-lg font-bold",
+                        Math.round((point.score / point.maxScore * 100) / 10) * 10 <= 30 ? "text-red-600" :
+                        Math.round((point.score / point.maxScore * 100) / 10) * 10 <= 60 ? "text-orange-600" :
+                        Math.round((point.score / point.maxScore * 100) / 10) * 10 <= 80 ? "text-yellow-600" :
+                        "text-green-600"
+                      )}>
+                        {Math.round((point.score / point.maxScore * 100) / 10) * 10}%
                       </div>
-                      <span className="text-[10px] text-gray-400">得分情况</span>
-                    </div>
-                    
-                    <div className={cn(
-                      "px-3 py-1 rounded text-xs font-bold border",
-                      point.riskLevel === 'high' ? "bg-red-50 text-red-600 border-red-100" :
-                      point.riskLevel === 'medium' ? "bg-orange-50 text-orange-600 border-orange-100" :
-                      point.riskLevel === 'low' ? "bg-yellow-50 text-yellow-600 border-yellow-100" :
-                      "bg-green-50 text-green-600 border-green-100"
-                    )}>
-                      {point.riskLevel === 'high' ? '高风险' :
-                       point.riskLevel === 'medium' ? '中风险' :
-                       point.riskLevel === 'low' ? '低风险' : '无风险'}
                     </div>
                   </div>
                 </div>
