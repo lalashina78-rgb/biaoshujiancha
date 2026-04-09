@@ -6,7 +6,8 @@ import {
   PieChart as PieChartIcon, ListFilter, Search,
   Info, ExternalLink, LayoutList, FileSearch,
   ChevronDown, ChevronUp, HelpCircle, XCircle,
-  Printer, Settings, ChevronLeft, ZoomIn, ZoomOut, FileText, BarChart2
+  Printer, Settings, ChevronLeft, ZoomIn, ZoomOut, FileText, BarChart2,
+  ClipboardCheck
 } from 'lucide-react';
 import { 
   ResponsiveContainer, RadarChart, PolarGrid, 
@@ -377,7 +378,7 @@ export const CheckResultPage: React.FC = () => {
       }));
 
     return (
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2 pb-6">
+      <div className="space-y-6 pr-2 pb-6">
         {/* 响应汇总与图表 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
           <div className="flex items-center gap-8">
@@ -442,14 +443,14 @@ export const CheckResultPage: React.FC = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* 维度分析 */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-base font-bold text-gray-900 flex items-center gap-2 mb-6">
               <BarChart2 size={18} className="text-brand" />
               分类匹配度分布
             </h3>
-            <div className="flex-1 min-h-[250px] mb-6">
+            <div className="h-[250px] mb-6">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                   <PolarGrid stroke="#f3f4f6" />
@@ -501,7 +502,7 @@ export const CheckResultPage: React.FC = () => {
           </div>
 
           {/* 详细响应列表 */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <LayoutList size={18} className="text-brand" />
@@ -580,7 +581,7 @@ export const CheckResultPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="p-6 space-y-4">
               {filteredPoints.map((point) => (
                 <div key={point.id} className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-brand/30 hover:shadow-sm transition-all bg-white group cursor-pointer">
                   <div className="flex-1">
@@ -705,7 +706,7 @@ export const CheckResultPage: React.FC = () => {
 
     if (viewMode === 'file') {
       return (
-        <div className="flex-1 flex flex-col min-h-0 space-y-6">
+        <div className="space-y-6">
           {renderSummaryCard()}
           <div className="flex gap-6 flex-1 min-h-0">
           {/* Left: File Preview (60%) */}
@@ -713,16 +714,16 @@ export const CheckResultPage: React.FC = () => {
             {/* PDF Toolbar */}
             <div className="px-4 py-3 border-b border-gray-100 bg-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1 bg-gray-50 rounded-lg p-1 border border-gray-100">
-                  <button className="p-1.5 hover:bg-white rounded text-gray-400 hover:text-gray-900 transition-all">
-                    <ChevronLeft size={16} />
+                <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-brand/20 shadow-sm">
+                  <button className="p-1.5 hover:bg-brand/5 rounded-lg text-brand transition-all">
+                    <ChevronLeft size={18} />
                   </button>
-                  <div className="px-2 flex items-center gap-2">
-                    <FileText size={14} className="text-brand" />
-                    <span className="text-xs font-bold text-gray-700">资信标.pdf</span>
+                  <div className="px-2 flex items-center gap-2.5">
+                    <FileText size={18} className="text-brand" />
+                    <span className="text-sm font-bold text-gray-900">资信标.pdf</span>
                   </div>
-                  <button className="p-1.5 hover:bg-white rounded text-gray-400 hover:text-gray-900 transition-all">
-                    <ChevronRight size={16} />
+                  <button className="p-1.5 hover:bg-brand/5 rounded-lg text-brand transition-all">
+                    <ChevronRight size={18} />
                   </button>
                 </div>
               </div>
@@ -745,8 +746,6 @@ export const CheckResultPage: React.FC = () => {
                 </div>
                 <div className="h-4 w-px bg-gray-200 mx-1" />
                 <button className="p-2 hover:bg-gray-50 rounded-lg text-gray-400"><Search size={18} /></button>
-                <button className="p-2 hover:bg-gray-50 rounded-lg text-gray-400"><Printer size={18} /></button>
-                <button className="p-2 hover:bg-gray-50 rounded-lg text-gray-400"><Settings size={18} /></button>
               </div>
             </div>
 
@@ -1014,11 +1013,11 @@ export const CheckResultPage: React.FC = () => {
     }
 
     return (
-      <div className="flex-1 flex flex-col min-h-0 space-y-6">
+      <div className="space-y-6">
         {renderSummaryCard()}
 
         {/* 检查结果列表 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-1 flex flex-col min-h-0">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between shrink-0">
             <h3 className="text-base font-bold text-gray-900">详细检查清单</h3>
             <div className="flex items-center gap-2">
@@ -1048,7 +1047,7 @@ export const CheckResultPage: React.FC = () => {
               ))}
             </div>
           </div>
-          <div className="overflow-auto flex-1">
+          <div>
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
@@ -1163,7 +1162,7 @@ export const CheckResultPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden">
+    <div className="flex flex-col w-full">
       {/* Top Header & Steps */}
       <div className="px-6 h-[88px] shrink-0 flex items-center">
         <div className="max-w-[1400px] w-full mx-auto flex items-center justify-between relative">
@@ -1221,19 +1220,27 @@ export const CheckResultPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-6 flex flex-col">
-        <div className="max-w-[1400px] w-full mx-auto flex-1 flex flex-col min-h-0 space-y-6">
+      <div className="p-6">
+        <div className="max-w-[1400px] w-full mx-auto space-y-6">
           {checkType === 'credit' && renderCreditView()}
           {checkType === 'technical' && renderTechnicalView()}
           {checkType === 'economic' && (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-2xl shadow-sm border border-gray-200 p-12 h-full">
+            <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-2xl shadow-sm border border-gray-200 p-12 py-24">
               <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                <BarChart2 size={32} className="text-gray-400" />
+                <ClipboardCheck size={32} className="text-gray-300" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">经济标检查功能开发中</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">未发起经济标检查</h3>
               <p className="text-gray-500 text-center max-w-md">
-                我们正在努力开发经济标的智能检查功能，包括工程量清单核对、综合单价分析、不平衡报价识别等，敬请期待。
+                当前项目尚未发起经济标智能检查，因此无法查看检查结果。您可以返回项目详情页发起检查，或上传相关经济标文件。
               </p>
+              <Button 
+                onClick={() => navigate(`/projects/${id}`)}
+                variant="outline" 
+                className="mt-8 flex items-center gap-2"
+              >
+                <ArrowLeft size={16} />
+                返回项目详情
+              </Button>
             </div>
           )}
         </div>

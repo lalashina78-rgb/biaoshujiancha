@@ -5,7 +5,7 @@ import {
   ArrowLeft, ChevronRight, Search, RotateCcw, 
   Plus, Edit2, Trash2, ExternalLink, AlertCircle,
   FileText, ZoomIn, ZoomOut, Maximize2, ChevronDown,
-  ChevronUp, CheckCircle2, Info, BarChart2
+  ChevronUp, CheckCircle2, Info, BarChart2, ClipboardCheck
 } from 'lucide-react';
 import { Button } from '../components/UI/Button';
 import { CheckSteps } from '../components/Check/CheckSteps';
@@ -432,16 +432,24 @@ export const CheckpointsPage: React.FC = () => {
           {/* List Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
             {activeTab === 'economic' ? (
-              <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-6 px-6">
                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                  <BarChart2 size={24} className="text-gray-400" />
+                  <ClipboardCheck size={24} className="text-gray-300" />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">经济标检查点提取功能开发中</h3>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-bold text-gray-900">未发起经济标检查</h3>
                   <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                    我们正在努力开发经济标的智能检查点提取功能，敬请期待。
+                    当前项目尚未发起经济标智能检查，因此无法提取检查点。您可以返回项目详情页发起检查，或上传相关经济标文件。
                   </p>
                 </div>
+                <Button 
+                  onClick={() => navigate(`/projects/${id}`)}
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft size={14} />
+                  返回项目详情
+                </Button>
               </div>
             ) : (
               (Object.entries(groupedCheckpoints) as [string, Checkpoint[]][]).map(([group, items]) => (
