@@ -197,6 +197,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
   
   const [expandedVersions, setExpandedVersions] = useState<string[]>([]);
   const [isAddVersionModalOpen, setIsAddVersionModalOpen] = useState(false);
+  const [showTempModal, setShowTempModal] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [technicalCheckModalVersions, setTechnicalCheckModalVersions] = useState<ProposalVersion[]>([]);
   const [creditCheckModalVersions, setCreditCheckModalVersions] = useState<ProposalVersion[]>([]);
@@ -427,6 +428,14 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
                onClick={() => setIsAddVersionModalOpen(true)}
              >
                <Plus size={14} /> 添加版本
+             </Button>
+             <Button 
+               size="sm" 
+               variant="outline" 
+               className="h-8 gap-1 text-gray-500 border-gray-200"
+               onClick={() => setShowTempModal(true)}
+             >
+               临时按钮
              </Button>
              <Button 
                size="sm" 
@@ -662,6 +671,29 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
           }
         }}
       />
+
+      {/* Temporary Modal */}
+      {showTempModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowTempModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 overflow-hidden text-center">
+            <div className="w-16 h-16 bg-brand/5 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Loader2 size={32} className="text-brand animate-spin" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">功能开发中</h3>
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+              添加版本功能正在全力开发中，敬请期待后续更新。
+            </p>
+            <Button 
+              variant="primary" 
+              className="w-full" 
+              onClick={() => setShowTempModal(false)}
+            >
+              我知道了
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
