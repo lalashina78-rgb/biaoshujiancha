@@ -153,14 +153,14 @@ export const CheckpointsPage: React.FC = () => {
     setEditingId(null);
   };
 
-  const handleAdd = () => {
+  const handleAdd = (group: string) => {
     const newCp: Checkpoint = {
       id: Date.now().toString(),
       name: '新检查点',
       requirement: '请输入检查要求',
       location: '手动添加',
       isMandatory: false,
-      group: '资质检查'
+      group: group
     };
     setCheckpoints(prev => ({
       ...prev,
@@ -420,13 +420,6 @@ export const CheckpointsPage: React.FC = () => {
                 </button>
               ))}
             </div>
-            <button 
-              onClick={handleAdd}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand/5 text-brand rounded-lg text-xs font-bold hover:bg-brand/10 transition-all"
-            >
-              <Plus size={14} />
-              新增检查点
-            </button>
           </div>
 
           {/* List Content */}
@@ -454,10 +447,19 @@ export const CheckpointsPage: React.FC = () => {
             ) : (
               (Object.entries(groupedCheckpoints) as [string, Checkpoint[]][]).map(([group, items]) => (
                 <div key={group} className="space-y-3">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                    <span className="w-1 h-3 bg-brand rounded-full" />
-                    {group}
-                  </h3>
+                  <div className="flex items-center justify-between group/header">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-1 h-3 bg-brand rounded-full" />
+                      {group}
+                    </h3>
+                    <button 
+                      onClick={() => handleAdd(group)}
+                      className="flex items-center gap-1 px-2 py-1 text-brand hover:bg-brand/5 rounded transition-all opacity-0 group-hover/header:opacity-100"
+                    >
+                      <Plus size={12} />
+                      <span className="text-[10px] font-bold">新增检查点</span>
+                    </button>
+                  </div>
                   <div className="space-y-3">
                     {items.map(cp => (
                       <div 
