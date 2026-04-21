@@ -5,7 +5,7 @@ import {
   AlertCircle, ChevronRight, Filter, BarChart3, 
   PieChart as PieChartIcon, ListFilter, Search,
   Info, ExternalLink, LayoutList, FileSearch,
-  ChevronDown, ChevronUp, HelpCircle, XCircle,
+  ChevronDown, ChevronUp, HelpCircle, XCircle, X,
   Printer, Settings, ChevronLeft, ZoomIn, ZoomOut, FileText, BarChart2,
   ClipboardCheck
 } from 'lucide-react';
@@ -84,12 +84,19 @@ const MOCK_CREDIT_RESULTS: CreditCheckItem[] = [
     requirementLocation: '招标文件 P12 第3.1.1条',
     responses: [
       {
-        sourceFile: '资信标.pdf',
+        sourceFile: '资格审查材料.pdf',
         texts: [
           { label: '企业名称', value: '某建筑工程有限公司' },
           { label: '资质等级', value: '建筑工程施工总承包二级' }
         ],
         materials: ['企业营业执照', '资质证书']
+      },
+      {
+        sourceFile: '其他项目材料.pdf',
+        texts: [
+          { label: '三类人员持证情况', value: '缺失其他成员证件' }
+        ],
+        materials: ['项目经理B类证书扫描件']
       }
     ],
     responseLocation: '投标文件 P45 资质证明部分',
@@ -205,6 +212,16 @@ export const CheckResultPage: React.FC = () => {
   const [pdfPage, setPdfPage] = useState<number>(1);
   const [activeResultId, setActiveResultId] = useState<string | null>(null);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const [previewModal, setPreviewModal] = useState<{isOpen: boolean, item: CreditCheckItem | null, sourceFile?: string}>({isOpen: false, item: null});
+
+  const handleLocatorClick = (e: React.MouseEvent, item: CreditCheckItem, sourceFile: string) => {
+    e.stopPropagation();
+    setPdfPage(parseInt(item.responseLocation.match(/P(\d+)/)?.[1] || '1'));
+    setActiveResultId(item.id);
+    if (viewMode === 'list') {
+      setPreviewModal({ isOpen: true, item, sourceFile });
+    }
+  };
 
   // Default positioning for File View
   React.useEffect(() => {
@@ -746,7 +763,10 @@ export const CheckResultPage: React.FC = () => {
 
                 {/* Highlight Overlay */}
                 <div 
-                  className="absolute left-0 w-full bg-brand/10 border-y-2 border-brand/30 animate-pulse pointer-events-none mix-blend-multiply z-10" 
+                  className={cn(
+                    "absolute left-0 w-full animate-pulse pointer-events-none mix-blend-multiply z-10",
+                    filteredCreditItems.find(i => i.id === activeResultId)?.status === 'fail' ? "bg-red-100/50 border-y-2 border-red-300" : "bg-brand/10 border-y-2 border-brand/30"
+                  )}
                   style={getHighlightStyle(0)} 
                 />
                 
@@ -836,7 +856,10 @@ export const CheckResultPage: React.FC = () => {
 
                 {/* Highlight Overlay */}
                 <div 
-                  className="absolute left-0 w-full bg-brand/10 border-y-2 border-brand/30 animate-pulse pointer-events-none mix-blend-multiply z-10" 
+                  className={cn(
+                    "absolute left-0 w-full animate-pulse pointer-events-none mix-blend-multiply z-10",
+                    filteredCreditItems.find(i => i.id === activeResultId)?.status === 'fail' ? "bg-red-100/50 border-y-2 border-red-300" : "bg-brand/10 border-y-2 border-brand/30"
+                  )}
                   style={getHighlightStyle(1)} 
                 />
 
@@ -983,9 +1006,19 @@ export const CheckResultPage: React.FC = () => {
                             {res.texts && res.texts.length > 0 && (
                               <div className="space-y-1 mb-2 last:mb-0">
                                 {res.texts.map((t, tidx) => (
-                                  <div key={tidx} className="flex items-start gap-2 text-xs">
-                                    <span className="text-gray-400 shrink-0">{t.label}：</span>
-                                    <span className="text-gray-900 font-medium">{t.value}</span>
+                                  <div 
+                                    key={tidx} 
+                                    className="flex items-start gap-2 text-xs"
+                                  >
+                                    <span className={cn("shrink-0", item.status === 'fail' ? "text-red-400" : "text-gray-400")}>
+                                      {t.label}：
+                                    </span>
+                                    <span 
+                                      onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
+                                      className={cn("font-medium transition-colors cursor-pointer hover:underline", item.status === 'fail' ? "text-red-600 hover:text-red-700" : "text-gray-900 hover:text-brand")}
+                                    >
+                                      {t.value}
+                                    </span>
                                   </div>
                                 ))}
                               </div>
@@ -994,7 +1027,16 @@ export const CheckResultPage: React.FC = () => {
                             {res.materials && res.materials.length > 0 && (
                               <div className="flex flex-wrap gap-1.5">
                                 {res.materials.map((m, midx) => (
-                                  <div key={midx} className="flex items-center gap-1 px-2 py-0.5 bg-brand/5 text-brand rounded text-[10px] font-medium border border-brand/10">
+                                  <div 
+                                    key={midx} 
+                                    onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
+                                    className={cn(
+                                      "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5",
+                                      item.status === 'fail' 
+                                        ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" 
+                                        : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10"
+                                    )}
+                                  >
                                     <FileText size={10} />
                                     {m}
                                   </div>
@@ -1117,9 +1159,19 @@ export const CheckResultPage: React.FC = () => {
                             {res.texts && res.texts.length > 0 && (
                               <div className="space-y-1">
                                 {res.texts.map((t, tidx) => (
-                                  <div key={tidx} className="flex items-start gap-2 text-xs">
-                                    <span className="text-gray-400 shrink-0">{t.label}：</span>
-                                    <span className="text-gray-900">{t.value}</span>
+                                  <div 
+                                    key={tidx} 
+                                    className="flex items-start gap-2 text-xs"
+                                  >
+                                    <span className={cn("shrink-0", item.status === 'fail' ? "text-red-400" : "text-gray-400")}>
+                                      {t.label}：
+                                    </span>
+                                    <span 
+                                      onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
+                                      className={cn("font-medium transition-colors cursor-pointer hover:underline", item.status === 'fail' ? "text-red-600 hover:text-red-700" : "text-gray-900 hover:text-brand")}
+                                    >
+                                      {t.value}
+                                    </span>
                                   </div>
                                 ))}
                               </div>
@@ -1128,7 +1180,16 @@ export const CheckResultPage: React.FC = () => {
                             {res.materials && res.materials.length > 0 && (
                               <div className="flex flex-wrap gap-1.5">
                                 {res.materials.map((m, midx) => (
-                                  <div key={midx} className="flex items-center gap-1 px-2 py-0.5 bg-brand/5 text-brand rounded text-[10px] font-medium border border-brand/10">
+                                  <div 
+                                    key={midx} 
+                                    onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
+                                    className={cn(
+                                      "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5",
+                                      item.status === 'fail' 
+                                        ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" 
+                                        : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10"
+                                    )}
+                                  >
                                     <FileText size={10} />
                                     {m}
                                   </div>
@@ -1155,6 +1216,203 @@ export const CheckResultPage: React.FC = () => {
             </table>
           </div>
         </div>
+
+        {/* Preview Modal for List View */}
+        {previewModal.isOpen && previewModal.item && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="text-brand" size={18} />
+                    <span className="font-bold text-gray-900">{previewModal.sourceFile || '证件材料.pdf'}</span>
+                  </div>
+                  <div className="h-4 w-px bg-gray-300" />
+                  <div className="flex items-center gap-1">
+                    <button className="p-1 hover:bg-gray-200 rounded transition-colors text-gray-500 disabled:opacity-50" disabled={pdfPage === 1} onClick={() => setPdfPage(Math.max(1, pdfPage - 1))}>
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="text-xs text-gray-600 font-medium px-2">第 {pdfPage} 页 / 共 156 页</span>
+                    <button className="p-1 hover:bg-gray-200 rounded transition-colors text-gray-500" onClick={() => setPdfPage(pdfPage + 1)}>
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-0.5 mr-2">
+                    <button className="p-1 hover:bg-gray-50 rounded transition-all text-gray-500">
+                      <ZoomOut size={16} />
+                    </button>
+                    <span className="text-[10px] text-gray-500 font-medium w-8 text-center">100%</span>
+                    <button className="p-1 hover:bg-gray-50 rounded transition-all text-gray-500">
+                      <ZoomIn size={16} />
+                    </button>
+                  </div>
+                  <button onClick={() => setPreviewModal({ isOpen: false, item: null })} className="p-1.5 hover:bg-gray-200 rounded-lg text-gray-400 transition-colors">
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+              
+              <div 
+                ref={scrollContainerRef}
+                className="flex-1 bg-gray-100/50 overflow-auto p-8 flex flex-col items-center gap-8"
+              >
+                {/* Page 1 */}
+                <div className="w-full max-w-2xl bg-white shadow-lg h-[1000px] p-16 relative text-gray-800 font-serif shrink-0">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+                    <div className="text-[120px] font-bold text-gray-100 -rotate-45 select-none whitespace-nowrap">
+                      投标文件 · 内部资料
+                    </div>
+                  </div>
+
+                  <div 
+                    className={cn(
+                      "absolute left-0 w-full animate-pulse pointer-events-none mix-blend-multiply z-10",
+                      previewModal.item?.status === 'fail' ? "bg-red-100/50 border-y-2 border-red-300" : "bg-brand/10 border-y-2 border-brand/30"
+                    )}
+                    style={getHighlightStyle(0)} 
+                  />
+                  
+                  <div className="text-center mb-12 border-b-2 border-gray-800 pb-6 relative z-0">
+                    <div className="flex justify-between items-end mb-4">
+                      <span className="text-xs text-gray-500">项目编号：ZB-2023-001</span>
+                      <span className="text-xs text-gray-500">正本</span>
+                    </div>
+                    <h2 className="text-3xl font-bold mb-4 tracking-wide">投标文件（资信标）</h2>
+                    <p className="text-sm text-gray-600">
+                      投标人：某建筑工程有限公司
+                    </p>
+                  </div>
+
+                  <div className="space-y-10 text-sm leading-relaxed relative z-0">
+                    <section>
+                      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span className="w-1.5 h-4 bg-gray-800 block"></span>
+                        一、 资质证明文件
+                      </h3>
+                      <div className="pl-4 space-y-6 text-justify">
+                        <div>
+                          <h4 className="font-bold mb-2">1. 营业执照</h4>
+                          <p className="indent-8 text-gray-600">
+                            我公司具有独立法人资格，现提供有效的营业执照副本复印件。统一社会信用代码：911100001234567890。
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="font-bold mb-2">2. 资质证书</h4>
+                          <p className="indent-8 text-gray-600">
+                            我公司具备建筑工程施工总承包二级资质，证书编号：D211123456，有效期至2023年12月31日。
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section>
+                      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span className="w-1.5 h-4 bg-gray-800 block"></span>
+                        二、 类似工程业绩
+                      </h3>
+                      <div className="pl-4 space-y-3 text-justify">
+                        <p className="indent-8">
+                          我公司自2021年1月1日以来，完成过以下类似工程业绩：
+                        </p>
+                        <table className="w-full border-collapse border border-gray-400 text-xs mt-4">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-gray-400 p-2 text-left">序号</th>
+                              <th className="border border-gray-400 p-2 text-left">项目名称</th>
+                              <th className="border border-gray-400 p-2 text-left">合同金额(万元)</th>
+                              <th className="border border-gray-400 p-2 text-left">竣工日期</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td className="border border-gray-400 p-2 text-center">1</td>
+                              <td className="border border-gray-400 p-2">某市体育馆建设项目</td>
+                              <td className="border border-gray-400 p-2 text-right">6,200.00</td>
+                              <td className="border border-gray-400 p-2 text-center">2022-05-15</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+
+                  <div className="absolute bottom-8 left-0 w-full flex justify-between px-16 text-xs text-gray-400 border-t border-gray-100 pt-4">
+                    <span>某建筑工程有限公司</span>
+                    <span>第 45 页 / 共 156 页</span>
+                  </div>
+                </div>
+
+                {/* Page 2 */}
+                <div className="w-full max-w-2xl bg-white shadow-lg h-[1000px] p-16 relative text-gray-800 font-serif shrink-0">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+                    <div className="text-[120px] font-bold text-gray-100 -rotate-45 select-none whitespace-nowrap">
+                      投标文件 · 内部资料
+                    </div>
+                  </div>
+
+                  <div 
+                    className={cn(
+                      "absolute left-0 w-full animate-pulse pointer-events-none mix-blend-multiply z-10",
+                      previewModal.item?.status === 'fail' ? "bg-red-100/50 border-y-2 border-red-300" : "bg-brand/10 border-y-2 border-brand/30"
+                    )}
+                    style={getHighlightStyle(1)} 
+                  />
+
+                  <div className="space-y-10 text-sm leading-relaxed relative z-0">
+                    <section>
+                      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span className="w-1.5 h-4 bg-gray-800 block"></span>
+                        三、 拟派项目主要人员
+                      </h3>
+                      <div className="pl-4 space-y-6 text-justify">
+                        <div>
+                          <h4 className="font-bold mb-2">1. 项目经理</h4>
+                          <p className="indent-8 text-gray-600">
+                            拟派项目经理张三，具备一级注册建造师执业资格（证书编号：京1112021202212345），并持有有效的安全生产考核合格证书（B证）。
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="font-bold mb-2">2. 技术负责人</h4>
+                          <p className="indent-8 text-gray-600">
+                            拟派技术负责人李四，工程师职称（中级），从事建筑工程施工技术管理工作8年。
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+                    
+                    <section>
+                      <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span className="w-1.5 h-4 bg-gray-800 block"></span>
+                        四、 财务状况及纳税证明
+                      </h3>
+                      <div className="pl-4 space-y-6 text-justify">
+                        <div>
+                          <h4 className="font-bold mb-2">1. 财务审计报告</h4>
+                          <p className="indent-8 text-gray-600">
+                            附2022年度经会计师事务所审计的财务报告复印件。报告显示，我公司2022年度资产负债率为55%，流动比率为1.5，财务状况良好。
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="font-bold mb-2">2. 社保及纳税证明</h4>
+                          <p className="indent-8 text-gray-600">
+                            附2023年10月、11月的社保缴纳证明，以及2023年10月、11月、12月的完税证明复印件。
+                          </p>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+
+                  <div className="absolute bottom-8 left-0 w-full flex justify-between px-16 text-xs text-gray-400 border-t border-gray-100 pt-4">
+                    <span>某建筑工程有限公司</span>
+                    <span>第 65 页 / 共 156 页</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
