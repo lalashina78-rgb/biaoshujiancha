@@ -9,10 +9,15 @@ import { useNavigate } from 'react-router-dom';
 import { Project, ProjectStatus, ProjectFile, ProposalVersion, CheckStatus } from '../../types';
 import { Button } from '../UI/Button';
 import { PageHeader } from '../common/PageHeader';
-import { AddVersionModal } from '../Modals/AddVersionModal';
-import { TechnicalCheckConfirmModal } from '../Modals/TechnicalCheckConfirmModal';
-import { CreditCheckConfirmModal } from '../Modals/CreditCheckConfirmModal';
+import { AddVersionModal, FileUploadData } from '../Modals/AddVersionModal';
+import { UnifiedCheckConfirmModal } from '../Modals/UnifiedCheckConfirmModal';
 import { useStore } from '../../store/useStore';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface ProjectDetailProps {
   project: Project;
@@ -132,9 +137,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
       referenceDocName: '招标文件 V1.0 + 答疑 01',
       uploadTime: new Date('2026-03-01T10:00:00'),
       files: [
-        { id: 'fv4_1', name: '资信标_最终.pdf', size: 5400000, uploadTime: new Date('2026-03-01T10:00:00') },
-        { id: 'fv4_2', name: '技术标_最终.pdf', size: 9200000, uploadTime: new Date('2026-03-01T10:00:00') },
-        { id: 'fv4_3', name: '经济标_最终.xlsx', size: 2200000, uploadTime: new Date('2026-03-01T10:00:00') },
+        { id: 'fv4_1', name: '投标函.pdf', size: 540000, uploadTime: new Date('2026-03-01T10:00:00'), categories: ['资信标'] },
+        { id: 'fv4_2', name: '投标保证金.pdf', size: 1200000, uploadTime: new Date('2026-03-01T10:00:00'), categories: ['资信标'] },
+        { id: 'fv4_3', name: '资格审查材料.pdf', size: 9200000, uploadTime: new Date('2026-03-01T10:00:00'), categories: ['资信标'] },
+        { id: 'fv4_4', name: '施工组织设计.pdf', size: 45000000, uploadTime: new Date('2026-03-01T10:00:00'), categories: ['技术标'] },
+        { id: 'fv4_5', name: '工程量清单报价表.xlsx', size: 2200000, uploadTime: new Date('2026-03-01T10:00:00'), categories: ['经济标'] },
       ],
       checkStatus: {
         credit: { status: 'pending', issueCount: 0 },
@@ -149,9 +156,9 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
       referenceDocName: '招标文件 V1.0',
       uploadTime: new Date('2026-02-20T15:30:00'),
       files: [
-        { id: 'fv3_1', name: '资信标_v3.pdf', size: 5300000, uploadTime: new Date('2026-02-20T15:30:00') },
-        { id: 'fv3_2', name: '技术标_v3.pdf', size: 8900000, uploadTime: new Date('2026-02-20T15:30:00') },
-        { id: 'fv3_3', name: '经济标_v3.xlsx', size: 2150000, uploadTime: new Date('2026-02-20T15:30:00') },
+        { id: 'fv3_1', name: '投标函_v3.pdf', size: 5300000, uploadTime: new Date('2026-02-20T15:30:00'), categories: ['资信标'] },
+        { id: 'fv3_2', name: '技术内容_v3.pdf', size: 8900000, uploadTime: new Date('2026-02-20T15:30:00'), categories: ['技术标'] },
+        { id: 'fv3_3', name: '报价文件_v3.xlsx', size: 2150000, uploadTime: new Date('2026-02-20T15:30:00'), categories: ['经济标'] },
       ],
       checkStatus: {
         credit: { status: 'success', issueCount: 0 },
@@ -199,8 +206,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
   const [isAddVersionModalOpen, setIsAddVersionModalOpen] = useState(false);
   const [showTempModal, setShowTempModal] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [technicalCheckModalVersions, setTechnicalCheckModalVersions] = useState<ProposalVersion[]>([]);
-  const [creditCheckModalVersions, setCreditCheckModalVersions] = useState<ProposalVersion[]>([]);
+  const [unifiedCheckModalVersions, setUnifiedCheckModalVersions] = useState<ProposalVersion[]>([]);
+  const [initialCheckType, setInitialCheckType] = useState<'credit' | 'technical' | 'economic' | null>(null);
   const navigate = useNavigate();
   const { updateProject } = useStore();
   const controlFileInputRef = useRef<HTMLInputElement>(null);
@@ -237,13 +244,30 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
     }
   };
 
+  const handleToggleFileCategory = (versionId: string, fileId: string, category: string) => {
+    setVersions(prev => prev.map(v => {
+      if (v.id !== versionId) return v;
+      return {
+        ...v,
+        files: v.files.map(f => {
+          if (f.id !== fileId) return f;
+          const currentCats = f.categories || [];
+          const newCats = currentCats.includes(category)
+            ? currentCats.filter(c => c !== category)
+            : [...currentCats, category];
+          return { ...f, categories: newCats };
+        })
+      };
+    }));
+  };
+
   const toggleVersion = (id: string) => {
     setExpandedVersions(prev => 
       prev.includes(id) ? prev.filter(v => v !== id) : [...prev, id]
     );
   };
 
-  const handleImportVersions = (versionName: string, remark: string, referenceDocName: string, files: File[]) => {
+  const handleImportVersions = (versionName: string, remark: string, referenceDocName: string, fileData: FileUploadData[]) => {
     // 1. Generate Name
     let finalName = versionName;
     let counter = 1;
@@ -253,10 +277,11 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
     }
 
     // 2. Create File Objects
-    const newFiles: ProjectFile[] = files.map(file => ({
+    const newFiles: ProjectFile[] = fileData.map(fd => ({
       id: `f_${Date.now()}_${Math.random()}`,
-      name: file.name,
-      size: file.size,
+      name: fd.file.name,
+      size: fd.file.size,
+      categories: fd.categories,
       uploadTime: new Date()
     }));
 
@@ -441,7 +466,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
                size="sm" 
                variant="primary" 
                className="h-8 gap-1"
-               onClick={() => setCreditCheckModalVersions(versions)}
+               onClick={() => {
+                 setUnifiedCheckModalVersions(versions);
+                 setInitialCheckType('credit');
+               }}
              >
                <CheckCircle size={14} /> 全部检查
              </Button>
@@ -479,13 +507,20 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
                     onClick={(e) => {
                       e.stopPropagation();
                       if (label === '技术' && status.status === 'pending') {
-                        setTechnicalCheckModalVersions([version]);
+                        setUnifiedCheckModalVersions([version]);
+                        setInitialCheckType('technical');
                       } else if (label === '技术' && (status.status === 'success' || status.status === 'warning')) {
                         navigate(`/projects/${project.id}/check-result?type=technical`);
                       } else if (label === '资信' && status.status === 'pending') {
-                        setCreditCheckModalVersions([version]);
+                        setUnifiedCheckModalVersions([version]);
+                        setInitialCheckType('credit');
                       } else if (label === '资信' && (status.status === 'success' || status.status === 'warning')) {
                         navigate(`/projects/${project.id}/check-result?type=credit`);
+                      } else if (label === '经济' && status.status === 'pending') {
+                        setUnifiedCheckModalVersions([version]);
+                        setInitialCheckType('economic');
+                      } else if (label === '经济' && (status.status === 'success' || status.status === 'warning')) {
+                        navigate(`/projects/${project.id}/check-result?type=economic`);
                       } else {
                         console.log(`Action: ${buttonText} for ${label}`);
                       }
@@ -550,7 +585,8 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
                         className="h-7 px-3 text-[11px] text-brand border-brand hover:bg-brand/5 bg-white"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setCreditCheckModalVersions([version]);
+                          setUnifiedCheckModalVersions([version]);
+                          setInitialCheckType('credit');
                         }}
                       >
                         开始检查
@@ -598,13 +634,44 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
                       <div className="mb-0">
                         {version.files.length > 0 ? (
                           <div className="divide-y divide-gray-100 border-y border-gray-100">
+                            {/* File Table Header */}
+                            <div className="grid grid-cols-[1fr_80px_200px_150px_80px] gap-4 items-center px-[44px] py-1.5 bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
+                              <span>文件名称</span>
+                              <span>大小</span>
+                              <span>所属分类 (可多选)</span>
+                              <span>上传时间</span>
+                              <span className="text-right">操作</span>
+                            </div>
+
                             {version.files.map((file) => (
                               <div key={file.id} className="flex items-center justify-between px-4 py-2 bg-white group hover:bg-gray-50 transition-colors">
                                 <div className="flex items-center gap-3 flex-1 min-w-0">
                                   <FileText size={14} className="text-text-tertiary shrink-0" />
-                                  <div className="grid grid-cols-[1fr_100px_150px] gap-4 items-center flex-1 min-w-0">
+                                  <div className="grid grid-cols-[1fr_80px_200px_150px] gap-4 items-center flex-1 min-w-0">
                                     <span className="text-sm font-regular text-text-primary truncate" title={file.name}>{file.name}</span>
                                     <span className="text-xs text-text-tertiary">{formatSize(file.size)}</span>
+                                    
+                                    {/* Category Multi-select */}
+                                    <div className="flex items-center gap-1.5">
+                                      {['资信标', '技术标', '经济标'].map(cat => (
+                                        <button 
+                                          key={cat}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleFileCategory(version.id, file.id, cat);
+                                          }}
+                                          className={cn(
+                                            "px-2 py-0.5 rounded text-[10px] font-bold border transition-all",
+                                            file.categories?.includes(cat)
+                                              ? "bg-brand/10 border-brand/20 text-brand"
+                                              : "bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-300 hover:text-gray-600"
+                                          )}
+                                        >
+                                          {cat}
+                                        </button>
+                                      ))}
+                                    </div>
+
                                     <span className="text-xs text-gray-400 hidden sm:inline-block">{formatDate(file.uploadTime)}</span>
                                   </div>
                                 </div>
@@ -642,32 +709,17 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
         onImport={handleImportVersions}
         suggestedVersionName={`V${(project?.versions?.length || 0) + 1}.0`}
       />
-      <TechnicalCheckConfirmModal
-        isOpen={technicalCheckModalVersions.length > 0}
-        onClose={() => setTechnicalCheckModalVersions([])}
+      <UnifiedCheckConfirmModal
+        isOpen={unifiedCheckModalVersions.length > 0}
+        onClose={() => setUnifiedCheckModalVersions([])}
         project={project}
-        versions={technicalCheckModalVersions}
-        onConfirm={(selectedFileIds) => {
-          setTechnicalCheckModalVersions([]);
+        versions={unifiedCheckModalVersions}
+        initialCheckType={initialCheckType}
+        onConfirm={(selectedFileIds, checkTypes) => {
+          setUnifiedCheckModalVersions([]);
           
-          // For the purpose of this task, we navigate to the progress page 
-          // so the user can see the newly created page.
-          if (selectedFileIds.length > 0) {
-            navigate(`/projects/${project.id}/check-progress?type=technical`);
-          }
-        }}
-      />
-      <CreditCheckConfirmModal
-        isOpen={creditCheckModalVersions.length > 0}
-        onClose={() => setCreditCheckModalVersions([])}
-        project={project}
-        versions={creditCheckModalVersions}
-        onConfirm={(selectedFileIds) => {
-          setCreditCheckModalVersions([]);
-          
-          // For now, navigate to the parsing stage of the progress page
-          if (selectedFileIds.length > 0) {
-            navigate(`/projects/${project.id}/check-progress?type=credit&stage=parsing`);
+          if (selectedFileIds.length > 0 && checkTypes.length > 0) {
+            navigate(`/projects/${project.id}/check-progress?type=${checkTypes[0]}&stage=parsing`);
           }
         }}
       />

@@ -42,6 +42,7 @@ export interface ProjectFile {
   size: number; // bytes
   uploadTime: Date;
   url?: string;
+  categories?: string[];
 }
 
 export interface CheckStatus {
@@ -145,4 +146,23 @@ export interface ScoringPointDetail extends ScoringPoint {
   requirementSource: string;
   responseContent: string;
   responseSource: string;
+}
+
+export interface BidResponse {
+  sourceFile: string;
+  texts?: { label: string; value: string }[];
+  materials?: string[];
+}
+
+export interface CreditCheckItem {
+  id: string;
+  index: string;
+  status: 'pass' | 'fail' | 'manual';
+  name: string;
+  requirement: string;
+  location: string;
+  requirementLocation: string;
+  responses: BidResponse[];
+  responseLocation: string;
+  explanation: string[];
 }
