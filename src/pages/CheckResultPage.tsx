@@ -54,7 +54,19 @@ export const CheckResultPage: React.FC = () => {
   const [creditFilter, setCreditFilter] = useState<'all' | 'fail' | 'pass' | 'manual'>('all');
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['c1']));
   const [pdfPage, setPdfPage] = useState<number>(1);
+  const [expandedBidResponses, setExpandedBidResponses] = useState<Set<string>>(new Set());
   const [activeResultId, setActiveResultId] = useState<string | null>(null);
+
+  const toggleBidResponse = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const newExpanded = new Set(expandedBidResponses);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedBidResponses(newExpanded);
+  };
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const [previewModal, setPreviewModal] = useState<{isOpen: boolean, item: CreditCheckItem | null, sourceFile?: string}>({isOpen: false, item: null});
 
@@ -824,7 +836,8 @@ export const CheckResultPage: React.FC = () => {
                     </button>
                   </div>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-4">
+                    {/* 要求描述 */}
                     <div>
                       <h4 className="text-[11px] font-bold text-gray-400 uppercase mb-1">要求描述</h4>
                       <div className="space-y-1">
@@ -836,10 +849,44 @@ export const CheckResultPage: React.FC = () => {
                         <span>{item.requirementLocation}</span>
                       </div>
                     </div>
+
+                    {/* 结果说明 */}
+                    <div className="pt-3 border-t border-gray-100/50">
+                      <h4 className="text-[11px] font-bold text-gray-400 uppercase mb-2">结果说明</h4>
+                      <div className="space-y-2">
+                        {item.explanation.map((exp, idx) => (
+                          <p key={idx} className="text-xs text-gray-600 leading-relaxed flex items-start gap-2">
+                            <span className={cn(
+                              "mt-1 w-1.5 h-1.5 rounded-full shrink-0",
+                              item.status === 'pass' ? "bg-green-500" :
+                              item.status === 'fail' ? "bg-red-500" :
+                              "bg-orange-500"
+                            )} />
+                            {exp}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
                     
-                    <div>
-                      <h4 className="text-[11px] font-bold text-gray-400 uppercase mb-2">投标响应</h4>
-                      <div className="space-y-3">
+                    {/* 投标响应 */}
+                    <div className="pt-3 border-t border-gray-100/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-[11px] font-bold text-gray-400 uppercase">投标响应</h4>
+                        <button 
+                          onClick={(e) => toggleBidResponse(e, item.id)}
+                          className="text-[10px] text-brand font-bold flex items-center gap-0.5 hover:underline"
+                        >
+                          {expandedBidResponses.has(item.id) ? (
+                            <>收起 <ChevronUp size={10} /></>
+                          ) : (
+                            <>展开 <ChevronDown size={10} /></>
+                          )}
+                        </button>
+                      </div>
+                      <div className={cn(
+                        "space-y-3 relative transition-all duration-300",
+                        !expandedBidResponses.has(item.id) && "max-h-[140px] overflow-hidden"
+                      )}>
                         {item.responses.map((res, ridx) => (
                           <div key={ridx} className="bg-white/50 rounded-lg p-2.5 border border-gray-100/50">
                             <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold mb-2">
@@ -889,18 +936,10 @@ export const CheckResultPage: React.FC = () => {
                             )}
                           </div>
                         ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-gray-100/50">
-                      <h4 className="text-[11px] font-bold text-gray-400 uppercase mb-1">结果说明</h4>
-                      <div className="space-y-1">
-                        {item.explanation.map((exp, idx) => (
-                          <p key={idx} className="text-xs text-gray-500 leading-relaxed italic flex items-start gap-1">
-                            <span className="mt-1 w-1 h-1 rounded-full bg-gray-300 shrink-0" />
-                            {exp}
-                          </p>
-                        ))}
+                        
+                        {!expandedBidResponses.has(item.id) && (
+                          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
+                        )}
                       </div>
                     </div>
                   </div>
@@ -953,8 +992,8 @@ export const CheckResultPage: React.FC = () => {
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-20">序号</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-32">检查结果</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-1/4">要求描述</th>
-                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-1/4">投标响应</th>
                   <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">结果说明</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider w-1/4">投标响应</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -992,66 +1031,92 @@ export const CheckResultPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="space-y-3">
-                        {item.responses.map((res, ridx) => (
-                          <div key={ridx} className="space-y-1.5">
-                            <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold">
-                              <FileSearch size={10} />
-                              <span>{res.sourceFile}</span>
-                            </div>
-                            
-                            {res.texts && res.texts.length > 0 && (
-                              <div className="space-y-1">
-                                {res.texts.map((t, tidx) => (
-                                  <div 
-                                    key={tidx} 
-                                    className="flex items-start gap-2 text-xs"
-                                  >
-                                    <span className={cn("shrink-0", item.status === 'fail' ? "text-red-400" : "text-gray-400")}>
-                                      {t.label}：
-                                    </span>
-                                    <span 
-                                      onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
-                                      className={cn("font-medium transition-colors cursor-pointer hover:underline", item.status === 'fail' ? "text-red-600 hover:text-red-700" : "text-gray-900 hover:text-brand")}
-                                    >
-                                      {t.value}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {res.materials && res.materials.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5">
-                                {res.materials.map((m, midx) => (
-                                  <div 
-                                    key={midx} 
-                                    onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
-                                    className={cn(
-                                      "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5",
-                                      item.status === 'fail' 
-                                        ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" 
-                                        : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10"
-                                    )}
-                                  >
-                                    <FileText size={10} />
-                                    {m}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         {item.explanation.map((exp, idx) => (
-                          <p key={idx} className="text-sm text-gray-500 leading-relaxed flex items-start gap-1.5">
-                            <span className="mt-2 w-1 h-1 rounded-full bg-gray-300 shrink-0" />
+                          <p key={idx} className="text-sm text-gray-500 leading-relaxed flex items-start gap-2">
+                            <span className={cn(
+                              "mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 border border-white/20 shadow-sm",
+                              item.status === 'pass' ? "bg-green-500" :
+                              item.status === 'fail' ? "bg-red-500" :
+                              "bg-orange-500"
+                            )} />
                             {exp}
                           </p>
                         ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 align-top">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">响应详情</span>
+                        <button 
+                          onClick={(e) => toggleBidResponse(e, item.id)}
+                          className="text-[10px] text-brand font-bold flex items-center gap-0.5 hover:underline"
+                        >
+                          {expandedBidResponses.has(item.id) ? (
+                            <>收起 <ChevronUp size={10} /></>
+                          ) : (
+                            <>展开 <ChevronDown size={10} /></>
+                          )}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <div className={cn(
+                          "space-y-3 overflow-hidden transition-all duration-300",
+                          !expandedBidResponses.has(item.id) && "max-h-[140px]"
+                        )}>
+                          {item.responses.map((res, ridx) => (
+                            <div key={ridx} className="space-y-1.5 p-2 bg-gray-50/50 rounded border border-gray-100/50">
+                              <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold">
+                                <FileSearch size={10} />
+                                <span>{res.sourceFile}</span>
+                              </div>
+                              
+                              {res.texts && res.texts.length > 0 && (
+                                <div className="space-y-1">
+                                  {res.texts.map((t, tidx) => (
+                                    <div 
+                                      key={tidx} 
+                                      className="flex items-start gap-2 text-xs"
+                                    >
+                                      <span className={cn("shrink-0 whitespace-nowrap", item.status === 'fail' ? "text-red-400" : "text-gray-400")}>
+                                        {t.label}：
+                                      </span>
+                                      <span 
+                                        onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
+                                        className={cn("font-medium transition-colors cursor-pointer hover:underline", item.status === 'fail' ? "text-red-600 hover:text-red-700" : "text-gray-900 hover:text-brand")}
+                                      >
+                                        {t.value}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {res.materials && res.materials.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {res.materials.map((m, midx) => (
+                                    <div 
+                                      key={midx} 
+                                      onClick={(e) => handleLocatorClick(e, item, res.sourceFile)}
+                                      className={cn(
+                                        "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium border cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5",
+                                        item.status === 'fail' 
+                                          ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" 
+                                          : "bg-brand/5 text-brand border-brand/10 hover:bg-brand/10"
+                                      )}
+                                    >
+                                      <FileText size={10} />
+                                      {m}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {!expandedBidResponses.has(item.id) && (
+                          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
+                        )}
                       </div>
                     </td>
                   </tr>

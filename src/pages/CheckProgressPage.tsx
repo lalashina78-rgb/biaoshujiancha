@@ -5,7 +5,7 @@ import {
   ArrowLeft, CheckCircle2, 
   ShieldAlert, Search, 
   FileCheck, BookOpen, FileSearch,
-  Cpu
+  Cpu, FileText, ChevronRight
 } from 'lucide-react';
 import { Button } from '../components/UI/Button';
 import { motion, AnimatePresence } from 'motion/react';
@@ -20,7 +20,7 @@ function cn(...inputs: ClassValue[]) {
 type CheckStatus = 'phase1' | 'phase2' | 'phase3' | 'completed' | 'error';
 
 interface ProgressPhase {
-  id: string;
+  id: 'extraction' | 'review' | 'reporting';
   label: string;
   description: string;
   icon: React.ReactNode;
@@ -33,46 +33,43 @@ interface LogEntry {
   type: 'info' | 'success' | 'warning';
 }
 
-const TECHNICAL_PHASES: ProgressPhase[] = [
+const CHECK_PHASES: ProgressPhase[] = [
   { 
-    id: 'phase1', 
-    label: '智能解析', 
-    description: '深度解析招标文件结构与关键要素',
+    id: 'extraction', 
+    label: '信息提取', 
+    description: '从投标文件及附件中提取评审关键要素',
     icon: <Search size={18} />
   },
   { 
-    id: 'phase2', 
-    label: '规则匹配', 
-    description: '基于响应标准进行全量响应点匹配',
+    id: 'review', 
+    label: '逐项评审', 
+    description: '结合评分标准对比提取到的信息进行合规性分析',
     icon: <Cpu size={18} />
   },
   { 
-    id: 'phase3', 
+    id: 'reporting', 
     label: '报告生成', 
-    description: '汇总分析结果并生成风险评估报告',
+    description: '汇总所有评价维度，生成最终评审意见与风险提示',
     icon: <FileCheck size={18} />
   }
 ];
 
-const CREDIT_PHASES: ProgressPhase[] = [
-  { 
-    id: 'phase1', 
-    label: '要素提取', 
-    description: '提取招标文件中的资信响应标准',
-    icon: <BookOpen size={18} />
-  },
-  { 
-    id: 'phase2', 
-    label: '资质核验', 
-    description: '交叉比对投标文件中的资质证明材料',
-    icon: <FileSearch size={18} />
-  },
-  { 
-    id: 'phase3', 
-    label: '结果汇总', 
-    description: '计算资信匹配度并生成合规性报告',
-    icon: <FileCheck size={18} />
-  }
+const MOCK_FILES = [
+  '投标函及投标函附录.pdf',
+  '法定代表人身份证明与授权委托书.pdf',
+  '联合体协议书（如有）.pdf',
+  '资格审查材料集.pdf',
+  '技术方案建议书.pdf',
+  '施工组织设计分项.doc'
+];
+
+const MOCK_POINTS = [
+  '企业营业执照有效性',
+  '类似项目业绩（近3年）要求',
+  '主要管理人员职称与社保核验',
+  '施工设备配备方案合理性',
+  '安全管理体系及应急预案',
+  '技术响应偏离度检测'
 ];
 
 export const CheckProgressPage: React.FC = () => {
@@ -83,23 +80,12 @@ export const CheckProgressPage: React.FC = () => {
   const project = projects.find(p => p.id === id);
 
   const checkType = searchParams.get('type') || 'credit';
-  const stage = searchParams.get('stage') || 'checking'; // 'parsing' or 'checking'
-  const isCredit = checkType === 'credit';
+  const stage = searchParams.get('stage') || 'checking';
 
-  const phases = useMemo(() => {
-    if (stage === 'parsing') {
-      return [
-        { id: 'phase1', label: '文件读取', description: '加载并解析PDF文件流', icon: <Search size={18} /> },
-        { id: 'phase2', label: '结构识别', description: '识别文档目录与章节层级', icon: <BookOpen size={18} /> },
-        { id: 'phase3', label: '关键点提取', description: '提取响应相关的关键信息点', icon: <FileSearch size={18} /> }
-      ];
-    }
-    return isCredit ? CREDIT_PHASES : TECHNICAL_PHASES;
-  }, [isCredit, stage]);
-
-  const [status, setStatus] = useState<CheckStatus>('phase1');
+  const [status, setStatus] = useState<ProgressPhase['id']>('extraction');
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [currentProcessingItem, setCurrentProcessingItem] = useState<string>(MOCK_FILES[0]);
 
   const addLog = (message: string, type: 'info' | 'success' | 'warning' = 'info') => {
     const now = new Date();
@@ -108,58 +94,57 @@ export const CheckProgressPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // Initial log
-    addLog('系统初始化完成，准备开始检查任务...', 'info');
+    addLog('启动智能化评审引擎...', 'info');
+    
+    let currentStep = 0;
+    const totalSteps = 20; // total "ticks" for simulation
+    
+    const interval = setInterval(() => {
+      currentStep++;
+      const percent = Math.min(Math.round((currentStep / totalSteps) * 100), 100);
+      setProgress(percent);
 
-    // Mock progress simulation
-    const timer1 = setTimeout(() => {
-      setProgress(33);
-      setStatus('phase1');
-      addLog('正在加载文件索引...', 'info');
-      addLog('PDF文本层解析完成，共识别 156 页', 'success');
-      addLog('开始提取关键章节内容...', 'info');
-    }, 1000);
-
-    const timer2 = setTimeout(() => {
-      setProgress(66);
-      setStatus('phase2');
-      addLog('第一阶段解析完成', 'success');
-      addLog('进入深度匹配阶段...', 'info');
-      addLog('正在比对响应标准与响应内容...', 'info');
-      addLog('发现 3 个潜在风险项', 'warning');
-      addLog('正在计算分项匹配度...', 'info');
-    }, 4000);
-
-    const timer3 = setTimeout(() => {
-      setProgress(90);
-      setStatus('phase3');
-      addLog('匹配度计算完成', 'success');
-      addLog('正在生成最终报告...', 'info');
-      addLog('汇总风险提示与优化建议...', 'info');
-    }, 7500);
-
-    const timer4 = setTimeout(() => {
-      setProgress(100);
-      setStatus('completed');
-      addLog('所有检查任务已完成！', 'success');
-      
-      // Auto redirect after a short delay
-      setTimeout(() => {
-        if (stage === 'parsing') {
-          navigate(`/projects/${id}/checkpoints?type=${checkType}`);
-        } else {
-          navigate(`/projects/${id}/check-result?type=${checkType}`);
+      // Phase logic
+      if (currentStep <= 8) {
+        setStatus('extraction');
+        const fileIndex = Math.min(Math.floor((currentStep - 1) / 1.5), MOCK_FILES.length - 1);
+        const fileName = MOCK_FILES[fileIndex];
+        if (fileName !== currentProcessingItem) {
+          setCurrentProcessingItem(fileName);
+          addLog(`正在提取 [${fileName}] 中的关键信息要素...`, 'info');
         }
-      }, 2000);
-    }, 10000);
+        if (currentStep === 8) addLog('信息提取阶段完成，共识别 12 个关键响应点', 'success');
+      } else if (currentStep <= 17) {
+        setStatus('review');
+        const pointIndex = Math.min(Math.floor((currentStep - 9) / 1.5), MOCK_POINTS.length - 1);
+        const pointName = MOCK_POINTS[pointIndex];
+        if (pointName !== currentProcessingItem) {
+          setCurrentProcessingItem(pointName);
+          addLog(`正在对 [${pointName}] 进行深度符合性评审...`, 'info');
+          if (pointIndex === 2) addLog('检测到一名关键人员社保记录不完整', 'warning');
+        }
+        if (currentStep === 17) addLog('评分项逐项审核完成，正在汇总逻辑关系', 'success');
+      } else {
+        setStatus('reporting');
+        setCurrentProcessingItem('正在整理最终报告...');
+        if (currentStep === 18) addLog('整理评审结论与优化建议...', 'info');
+        if (currentStep === 20) addLog('评审任务圆满完成！', 'success');
+      }
 
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
-    };
-  }, [id, checkType, stage, navigate]);
+      if (currentStep >= totalSteps) {
+        clearInterval(interval);
+        setTimeout(() => {
+          if (stage === 'parsing') {
+            navigate(`/projects/${id}/checkpoints?type=${checkType}`);
+          } else {
+            navigate(`/projects/${id}/check-result?type=${checkType}`);
+          }
+        }, 1500);
+      }
+    }, 800);
+
+    return () => clearInterval(interval);
+  }, [id, checkType, stage, navigate, currentProcessingItem]);
 
   if (!project) {
     return (
@@ -171,8 +156,8 @@ export const CheckProgressPage: React.FC = () => {
     );
   }
 
-  const currentPhaseIndex = status === 'completed' ? 3 : phases.findIndex(p => p.id === status);
-  const currentLogs = logs.slice(-3); // Show last 3 logs
+  const currentPhaseIndex = CHECK_PHASES.findIndex(p => p.id === status);
+  const displayLogs = logs.slice(-4);
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -209,50 +194,32 @@ export const CheckProgressPage: React.FC = () => {
         <div className="max-w-[1400px] w-full mx-auto flex-1 flex flex-col min-h-0 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
         {/* Left Column: Immersive Scanning Area */}
+        {/* Left Side: Document Preview (Simplified) */}
         <div className="lg:col-span-6 flex flex-col h-full">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col items-center justify-center h-full relative overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col items-center justify-center h-full relative">
             
-            {/* PDF Icon with Scanning Animation */}
-            <div className="relative w-32 h-40 mb-12">
-              {/* PDF Base Icon */}
-              <div className="absolute inset-0 bg-blue-50/80 rounded-xl border-2 border-blue-100 flex flex-col items-center justify-center overflow-hidden shadow-sm">
-                <div className="w-14 h-16 bg-white rounded border border-blue-100 shadow-sm flex flex-col items-center justify-center mb-3">
-                   <span className="text-blue-600 font-bold text-xl">PDF</span>
-                </div>
-                <div className="w-20 h-1.5 bg-blue-200/60 rounded-full mb-2"></div>
-                <div className="w-16 h-1.5 bg-blue-200/60 rounded-full mb-2"></div>
-                <div className="w-20 h-1.5 bg-blue-200/60 rounded-full"></div>
+            {/* Simple Document Icon */}
+            <div className="bg-indigo-50 rounded-2xl border-2 border-indigo-100 flex flex-col items-center justify-center p-12 mb-8 shadow-sm">
+              <div className="w-16 h-20 bg-white rounded-lg border border-indigo-100 shadow-sm flex flex-col items-center justify-center mb-4">
+                <FileText size={40} className="text-indigo-600" />
               </div>
-              
-              {/* Scanning Light Band */}
-              {status !== 'completed' && (
-                <motion.div 
-                  className="absolute left-[-30%] right-[-30%] h-0.5 bg-brand shadow-[0_0_12px_rgba(59,130,246,0.9)] z-10"
-                  animate={{ top: ['0%', '100%', '0%'] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                >
-                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-brand/20 to-transparent"></div>
-                  <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-brand/20 to-transparent"></div>
-                </motion.div>
-              )}
+              <div className="text-center">
+                <div className="text-brand font-bold text-xs tracking-widest uppercase mb-1">正在评审项目</div>
+                <h3 className="text-xl font-bold text-gray-900">招标文件.pdf</h3>
+                <p className="text-sm text-gray-400 mt-2">15.4 MB • 156 页</p>
+              </div>
             </div>
 
-            {/* File Info */}
-            <div className="text-center z-10">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {stage === 'parsing' 
-                  ? '招标文件.pdf' 
-                  : (isCredit ? '资信标投标文件.pdf' : '技术标投标文件.pdf')}
-              </h3>
-              <p className="text-sm text-gray-500 mb-8">15.4 MB</p>
-              
-              <div className="flex flex-col items-center justify-center gap-3">
-                <span className="text-sm font-medium text-gray-600">
-                  {status === 'completed' ? '解析完成' : '智能解析中...'}
-                </span>
-                {status !== 'completed' && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-brand animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
-                )}
+            {/* Simple Status Card */}
+            <div className="w-full max-w-sm bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                <div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">系统当前状态</div>
+                <div className="text-sm font-bold text-gray-900">
+                  {status === 'extraction' ? '智能提取响应点' : status === 'review' ? '逐项核验评审中' : '汇总评审意见'}
+                </div>
               </div>
             </div>
           </div>
@@ -263,13 +230,16 @@ export const CheckProgressPage: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 h-full flex flex-col">
             
             {/* Global Progress Top */}
-            <div className="mb-12">
-              <div className="text-5xl font-light text-gray-800 mb-4 font-mono">
-                {progress}%
+            <div className="mb-10">
+              <div className="flex items-end justify-between mb-4">
+                <div className="text-sm font-bold text-gray-400 uppercase tracking-wider">总进度</div>
+                <div className="text-5xl font-light text-brand font-mono leading-none">
+                  {progress}<span className="text-2xl ml-1">%</span>
+                </div>
               </div>
-              <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden p-0.5">
                 <motion.div 
-                  className="h-full bg-brand rounded-full"
+                  className="h-full bg-indigo-600 rounded-full shadow-[0_0_8px_rgba(79,70,229,0.4)]"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5 }}
@@ -282,61 +252,75 @@ export const CheckProgressPage: React.FC = () => {
               {/* Vertical Line */}
               <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-gray-100" />
 
-              {phases.map((phase, index) => {
-                const isCompleted = index < currentPhaseIndex || status === 'completed';
-                const isCurrent = index === currentPhaseIndex && status !== 'completed';
-                const isPending = index > currentPhaseIndex && status !== 'completed';
+              {CHECK_PHASES.map((phase, index) => {
+                const isCompleted = index < currentPhaseIndex || progress === 100;
+                const isCurrent = index === currentPhaseIndex && progress < 100;
+                const isPending = index > currentPhaseIndex && progress < 100;
 
                 return (
-                  <div key={phase.id} className="relative flex gap-5 group">
+                  <div key={phase.id} className="relative flex gap-6 group">
                     {/* Icon/Dot */}
-                    <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-white ${
-                      isCompleted ? 'text-green-500' :
-                      isCurrent ? 'text-brand' :
-                      'text-gray-300'
-                    }`}>
+                    <div className={cn(
+                      "relative z-10 w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2 transition-all duration-300 shadow-sm",
+                      isCompleted ? "bg-green-500 border-green-500 text-white" :
+                      isCurrent ? "bg-white border-brand text-brand" :
+                      "bg-white border-gray-100 text-gray-300"
+                    )}>
                       {isCompleted ? (
-                        <CheckCircle2 size={26} className="bg-white" />
+                        <CheckCircle2 size={20} />
                       ) : isCurrent ? (
-                        <div className="w-5 h-5 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+                        <motion.div 
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Cpu size={18} />
+                        </motion.div>
                       ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-200" />
+                        <div className="w-5 h-5 rounded-full border-2 border-gray-100" />
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className={`flex-1 pt-1 ${
-                      isPending ? 'opacity-40' : 'opacity-100'
-                    }`}>
+                    <div className={cn(
+                      "flex-1 pt-1 transition-all duration-300",
+                      isPending ? "opacity-30" : "opacity-100"
+                    )}>
                       <div className="flex items-center gap-3 mb-1">
-                        <h4 className={`text-base font-bold ${
-                          isCurrent ? 'text-gray-900' : 
-                          isCompleted ? 'text-gray-900' : 'text-gray-500'
-                        }`}>
+                        <h4 className={cn(
+                          "text-base font-bold",
+                          isCurrent || isCompleted ? "text-gray-900" : "text-gray-400"
+                        )}>
                           {phase.label}
-                          {isCurrent && <span className="ml-2 text-sm font-normal text-gray-500">(处理中...)</span>}
                         </h4>
+                        {isCurrent && (
+                          <div className="flex gap-1">
+                            <span className="w-1 h-1 rounded-full bg-brand animate-[bounce_1s_infinite_100ms]" />
+                            <span className="w-1 h-1 rounded-full bg-brand animate-[bounce_1s_infinite_200ms]" />
+                            <span className="w-1 h-1 rounded-full bg-brand animate-[bounce_1s_infinite_300ms]" />
+                          </div>
+                        )}
                       </div>
                       
-                      {isCompleted && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          已完成
-                        </p>
-                      )}
+                      <p className="text-sm text-gray-400 leading-relaxed truncate">
+                        {isCompleted ? "该阶段已全部处理完成" : isCurrent ? `正在分析: ${currentProcessingItem}` : phase.description}
+                      </p>
                       
-                      {/* Sub-steps visual (only for current) */}
+                      {/* Filename Logs (Simplified) */}
                       {isCurrent && (
-                        <div className="mt-3 space-y-2">
-                          <AnimatePresence mode="popLayout">
-                            {currentLogs.map((log) => (
+                        <div className="mt-4 space-y-1.5 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
+                          <AnimatePresence mode="popLayout" initial={false}>
+                            {displayLogs.map((log) => (
                               <motion.div 
                                 key={log.id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="flex items-center gap-2 text-sm text-gray-600"
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={cn(
+                                  "flex items-center gap-2 text-[11px] font-medium",
+                                  log.type === 'warning' ? "text-orange-500" : 
+                                  log.type === 'success' ? "text-green-500" : "text-gray-400"
+                                )}
                               >
-                                <div className="w-1.5 h-1.5 rounded-full bg-brand/60 shrink-0" />
+                                <ChevronRight size={10} className="shrink-0 opacity-50" />
                                 <span className="truncate">{log.message}</span>
                               </motion.div>
                             ))}
