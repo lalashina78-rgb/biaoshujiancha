@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Upload, FileText, Check, Loader2, Trash2 } from 'lucide-react';
+import { X, Upload, FileText, Check, Loader2, Trash2, Sparkles, Cpu, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Project, ProjectStatus, ProjectType } from '../../types';
 
 interface CreateProjectModalProps {
@@ -18,8 +19,16 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
   // File Upload State
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [parsingPhase, setParsingPhase] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const parsingMessages = [
+    '正在解析文件结构...',
+    '智能提取项目关键信息...',
+    '分析所属地区与截止时间...',
+    '优化项目名称...',
+    '解析完成'
+  ];
 
   // Reset state when modal opens
   useEffect(() => {
@@ -31,7 +40,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
       setOpeningDate('');
       setFile(null);
       setIsUploading(false);
-      setUploadProgress(0);
+      setParsingPhase(0);
     }
   }, [isOpen]);
 
@@ -41,36 +50,33 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setIsUploading(true);
-      setUploadProgress(0);
+      setParsingPhase(0);
 
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
+      // Simulate parsing phases
+      const phaseInterval = setInterval(() => {
+        setParsingPhase(prev => {
+          if (prev >= parsingMessages.length - 2) {
+            return prev;
           }
-          return prev + 10;
+          return prev + 1;
         });
-      }, 200);
+      }, 600);
 
       // Simulate completion
       setTimeout(() => {
-        clearInterval(interval);
-        setUploadProgress(100);
+        clearInterval(phaseInterval);
+        setParsingPhase(parsingMessages.length - 1);
         setIsUploading(false);
         setFile(selectedFile);
         
-        // Auto-fill project name from filename (remove extension)
         const fileNameWithoutExt = selectedFile.name.replace(/\.[^/.]+$/, "");
         setName(fileNameWithoutExt);
-      }, 2500);
+      }, 3000);
     }
   };
 
   const handleRemoveFile = () => {
     setFile(null);
-    setUploadProgress(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -139,19 +145,86 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
             )}
 
             {isUploading && (
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Loader2 size={16} className="animate-spin text-brand" />
-                    <span className="text-sm font-medium text-gray-700">正在解析文件...</span>
-                  </div>
-                  <span className="text-xs text-gray-500">{uploadProgress}%</span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-brand transition-all duration-300 ease-out"
-                    style={{ width: `${uploadProgress}%` }}
+              <div className="border border-brand/20 rounded-xl p-6 bg-brand/5 overflow-hidden relative">
+                {/* Background Animation Effects */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <motion.div 
+                    animate={{ 
+                      x: ['-100%', '100%'],
+                      opacity: [0, 0.3, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-brand/20 to-transparent skew-x-12"
                   />
+                </div>
+
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="relative mb-4">
+                    {/* Pulsing rings */}
+                    <motion.div 
+                      animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 bg-brand rounded-full filter blur-xl"
+                    />
+                    <div className="relative w-16 h-16 bg-white rounded-2xl shadow-lg border border-brand/10 flex items-center justify-center overflow-hidden">
+                      <motion.div 
+                        animate={{ 
+                          translateY: ['-20px', '20px', '-20px'],
+                        }}
+                        transition={{ 
+                          duration: 3, 
+                          repeat: Infinity, 
+                          ease: "easeInOut" 
+                        }}
+                        className="absolute inset-x-0 h-1 bg-brand/50 shadow-[0_0_10px_2px_rgba(37,99,235,0.4)] z-20"
+                      />
+                      <Sparkles className="text-brand animate-pulse" size={32} />
+                    </div>
+                  </div>
+
+                  <div className="text-center space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Cpu size={14} className="text-brand" />
+                      </motion.div>
+                      <span className="text-sm font-bold text-gray-800 tracking-tight">AI 智能解析中</span>
+                    </div>
+                    
+                    <div className="h-6 overflow-hidden">
+                      <AnimatePresence mode="wait">
+                        <motion.p 
+                          key={parsingPhase}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="text-xs text-gray-500 font-medium italic"
+                        >
+                          {parsingMessages[parsingPhase]}
+                        </motion.p>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  {/* Micro-indicators */}
+                  <div className="mt-4 flex gap-1">
+                    {[0, 1, 2, 3].map((i) => (
+                      <motion.div 
+                        key={i}
+                        animate={{ 
+                          backgroundColor: i <= (parsingPhase % 4) ? '#2563eb' : '#e5e7eb',
+                          scale: i <= (parsingPhase % 4) ? 1.2 : 1
+                        }}
+                        className="w-1.5 h-1.5 rounded-full"
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
