@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggle }) => {
   return (
     <div className={`bg-white h-full border-r border-gray-200 transition-all duration-300 flex flex-col ${collapsed ? 'w-20' : 'w-64'}`}>
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-        {!collapsed && <span className="font-bold text-xl text-brand">TenderCheck</span>}
+        {!collapsed && <span className="font-bold text-xl text-brand tracking-tighter shrink-0">标桥·AI标书检查</span>}
         <button onClick={onToggle} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
           {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>

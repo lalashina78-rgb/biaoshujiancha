@@ -27,9 +27,9 @@ interface UnifiedCheckConfirmModalProps {
 }
 
 const checkTypeConfig = [
-  { id: 'credit', label: '资信标检查', category: '资信标', icon: Zap },
-  { id: 'technical', label: '技术标检查', category: '技术标', icon: FileCheck },
-  { id: 'economic', label: '经济标检查', category: '经济标', icon: SlidersHorizontal },
+  { id: 'credit', label: '资信标检查', category: '资信标', icon: Zap, disabled: false },
+  { id: 'technical', label: '技术标检查', category: '技术标', icon: FileCheck, disabled: false },
+  { id: 'economic', label: '经济标检查', category: '经济标', icon: SlidersHorizontal, disabled: true },
 ];
 
 export const UnifiedCheckConfirmModal: React.FC<UnifiedCheckConfirmModalProps> = ({
@@ -45,7 +45,12 @@ export const UnifiedCheckConfirmModal: React.FC<UnifiedCheckConfirmModalProps> =
 
   useEffect(() => {
     if (isOpen) {
-      const initialTypes = initialCheckType ? [initialCheckType] : ['credit'];
+      // Don't auto-select disabled types
+      const initialType = initialCheckType && !checkTypeConfig.find(c => c.id === initialCheckType)?.disabled 
+        ? initialCheckType 
+        : 'credit';
+      
+      const initialTypes = [initialType];
       setSelectedCheckTypes(initialTypes);
       
       // Auto-select files matching the initial check type
@@ -169,34 +174,49 @@ export const UnifiedCheckConfirmModal: React.FC<UnifiedCheckConfirmModalProps> =
           <div>
             <h3 className="text-base font-bold text-gray-900 mb-4">检查范围</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {checkTypeConfig.map(({ id, label, icon: Icon }) => {
+              {checkTypeConfig.map(({ id, label, icon: Icon, disabled }) => {
                 const isSelected = selectedCheckTypes.includes(id);
                 return (
                   <button
                     key={id}
-                    onClick={() => toggleCheckType(id)}
+                    onClick={() => !disabled && toggleCheckType(id)}
+                    disabled={disabled}
                     className={cn(
                       "relative p-6 rounded-2xl border-2 text-left transition-all overflow-hidden group flex flex-col gap-4",
-                      isSelected 
-                        ? "border-indigo-600 bg-indigo-50/50" 
-                        : "border-gray-200 bg-white hover:border-gray-300"
+                      disabled 
+                        ? "border-gray-100 bg-gray-50/50 cursor-not-allowed grayscale"
+                        : isSelected 
+                          ? "border-indigo-600 bg-indigo-50/50" 
+                          : "border-gray-200 bg-white hover:border-gray-300"
                     )}
                   >
-                    <Icon 
-                      size={28} 
-                      className={cn(
-                        "transition-colors",
-                        isSelected ? "text-indigo-600" : "text-gray-400 group-hover:text-gray-600"
-                      )} 
-                    />
+                    <div className="flex items-center justify-between">
+                      <Icon 
+                        size={28} 
+                        className={cn(
+                          "transition-colors",
+                          disabled 
+                            ? "text-gray-300"
+                            : isSelected ? "text-indigo-600" : "text-gray-400 group-hover:text-gray-600"
+                        )} 
+                      />
+                      {disabled && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">
+                          敬请期待
+                        </span>
+                      )}
+                    </div>
+                    
                     <span className={cn(
                       "font-bold text-base",
-                      isSelected ? "text-indigo-900" : "text-gray-700"
+                      disabled 
+                        ? "text-gray-400"
+                        : isSelected ? "text-indigo-900" : "text-gray-700"
                     )}>
                       {label}
                     </span>
 
-                    {isSelected && (
+                    {isSelected && !disabled && (
                       <div className="absolute top-4 right-4 text-indigo-600">
                         <CheckCircle2 size={24} />
                       </div>

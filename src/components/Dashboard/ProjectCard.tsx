@@ -1,23 +1,15 @@
 import React from 'react';
-import { Clock, RefreshCw, Clock3, Calendar } from 'lucide-react';
-import { Project, ProjectStatus, ProjectType } from '../../types';
-import { CheckCircle2, AlertCircle, Clock3 as ClockPending, FileText } from 'lucide-react';
+import { RefreshCw, FileText, Layers } from 'lucide-react';
+import { Project, ProjectStatus } from '../../types';
 
 interface ProjectCardProps {
   project: Project;
   onClick: (project: Project) => void;
   isFirst?: boolean;
   isLast?: boolean;
-  showCheckStatus?: boolean;
 }
 
-export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick, isFirst, isLast, showCheckStatus }) => {
-  const formatDate = (date?: Date) => {
-    if (!date) return '未设置';
-    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) + ' ' + 
-           date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
-  };
-
+export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -29,39 +21,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick, isFi
     return date.toLocaleDateString('zh-CN');
   };
 
-  const getNextNode = (project: Project) => {
-    const now = new Date();
-    if (project.deadline && project.deadline > now) {
-      const diffDays = Math.ceil((project.deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return { 
-        label: '投标截止', 
-        time: project.deadline, 
-        isUrgent: diffDays <= 3,
-        daysLeft: diffDays,
-        icon: <Clock size={16} className={diffDays <= 3 ? "text-red-500" : "text-gray-400"} />
-      };
-    }
-    if (project.openingDate && project.openingDate > now) {
-      const diffDays = Math.ceil((project.openingDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      return { 
-        label: '开标时间', 
-        time: project.openingDate, 
-        isUrgent: diffDays <= 3,
-        daysLeft: diffDays,
-        icon: <Calendar size={16} className={diffDays <= 3 ? "text-red-500" : "text-gray-400"} />
-      };
-    }
-    return { 
-      label: '投标截止', 
-      time: project.deadline, 
-      isUrgent: false,
-      daysLeft: 0,
-      icon: <Clock size={16} className="text-gray-400" />
-    };
-  };
-
-  const nextNode = getNextNode(project);
-  
   const getStatusColor = (status: ProjectStatus) => {
     switch (status) {
       case ProjectStatus.CREATED: return 'bg-gray-100 text-gray-600';
@@ -85,22 +44,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick, isFi
       case ProjectStatus.WON: return '已中标';
       case ProjectStatus.LOST: return '未中标';
       default: return status;
-    }
-  };
-
-  const renderProgressIcon = (status: 'success' | 'warning' | 'pending') => {
-    switch (status) {
-      case 'success': return <CheckCircle2 size={14} className="text-green-500" />;
-      case 'warning': return <AlertCircle size={14} className="text-orange-500" />;
-      case 'pending': return <ClockPending size={14} className="text-gray-300" />;
-    }
-  };
-
-  const getProgressColor = (status: 'success' | 'warning' | 'pending') => {
-    switch (status) {
-      case 'success': return 'text-gray-700';
-      case 'warning': return 'text-orange-600';
-      case 'pending': return 'text-gray-400';
     }
   };
 
@@ -132,44 +75,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick, isFi
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <div className={`flex items-center gap-1.5 text-[13px] ${nextNode.isUrgent ? 'text-red-500' : 'text-gray-500'}`}>
-            {nextNode.icon}
-            <span className="font-medium">
-              {nextNode.label}: {nextNode.time ? (
-                nextNode.time.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }) + ' ' + 
-                nextNode.time.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
-              ) : '未设置'}
-            </span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-[13px] text-gray-500">
+            <Layers size={14} className="text-brand/60" />
+            <span className="font-medium text-gray-700">版本数量: {project.versions?.length || 0}</span>
           </div>
-          {nextNode.daysLeft > 0 && nextNode.daysLeft <= 3 && (
-            <span className="bg-red-500 text-white text-[11px] px-1.5 py-0.5 rounded font-medium">
-              剩 {nextNode.daysLeft} 天
-            </span>
-          )}
         </div>
       </div>
-
-      {/* Third Row: Check Progress (Optional) */}
-      {showCheckStatus && (
-        <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-          <span className="text-[13px] text-gray-400">检查进度</span>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-1.5">
-              <span className={`text-[13px] ${getProgressColor(project.progress.credit)}`}>资信标</span>
-              {renderProgressIcon(project.progress.credit)}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className={`text-[13px] ${getProgressColor(project.progress.technical)}`}>技术标</span>
-              {renderProgressIcon(project.progress.technical)}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className={`text-[13px] ${getProgressColor(project.progress.economic)}`}>经济标</span>
-              {renderProgressIcon(project.progress.economic)}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -522,7 +522,7 @@ export const CheckResultPage: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 p-3 bg-gray-50/80 rounded-xl border border-gray-100 text-sm text-gray-600">
                 <Info size={16} className="text-brand shrink-0" />
-                <p>检查结果仅供参考，请以具体检查结果为准。人工检查项，请自己填写！</p>
+                <p>免责声明：AI 辅助评审结果仅供风险识别参考，不作为唯一判别依据。请务必人工核实关键条款，确保投标安全合规。</p>
               </div>
             </div>
           </div>
@@ -1373,12 +1373,16 @@ export const CheckResultPage: React.FC = () => {
               </button>
               <button 
                 onClick={() => setSearchParams({ type: 'economic' })}
+                disabled={true}
                 className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-bold transition-all",
-                  checkType === 'economic' ? "bg-brand text-white shadow-sm" : "text-gray-500 hover:text-gray-900"
+                  "px-4 py-1.5 rounded-md text-sm font-bold transition-all flex items-center gap-2",
+                  "text-gray-300 cursor-not-allowed"
                 )}
               >
                 经济标
+                <span className="text-[9px] px-1 py-0.5 rounded bg-gray-100 text-gray-400 font-bold tracking-tighter">
+                  敬请期待
+                </span>
               </button>
             </div>
           </div>

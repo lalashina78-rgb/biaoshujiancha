@@ -97,6 +97,14 @@ export const RiskOverview: React.FC<RiskOverviewProps> = ({ projects }) => {
           </div>
         )}
       </div>
+      <div className="mt-auto pt-4 border-t border-gray-100">
+        <div className="flex items-start gap-2 p-3 bg-gray-50/50 rounded-lg border border-gray-100">
+          <AlertCircle className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
+          <p className="text-[10px] leading-relaxed text-gray-400">
+            AI 辅助评审结果仅供风险识别参考，不作为唯一判别依据。请务必仔细较对检查结果，确保投标安全合规。
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

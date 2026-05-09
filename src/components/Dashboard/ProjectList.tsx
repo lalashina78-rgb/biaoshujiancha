@@ -10,10 +10,9 @@ interface ProjectListProps {
   onCreateClick: () => void;
   onProjectClick: (project: Project) => void;
   viewMode?: 'grid' | 'list';
-  showCheckStatus?: boolean;
 }
 
-export const ProjectList: React.FC<ProjectListProps> = ({ projects, onCreateClick, onProjectClick, viewMode = 'grid', showCheckStatus }) => {
+export const ProjectList: React.FC<ProjectListProps> = ({ projects, onCreateClick, onProjectClick, viewMode = 'grid' }) => {
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'DONE' | 'ARCHIVED'>('ACTIVE');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -109,7 +108,6 @@ export const ProjectList: React.FC<ProjectListProps> = ({ projects, onCreateClic
                     onClick={() => onProjectClick(project)} 
                     isFirst={index === 0}
                     isLast={index === paginatedProjects.length - 1 && filteredProjects.length <= itemsPerPage}
-                    showCheckStatus={showCheckStatus}
                   />
                 ))}
               </div>

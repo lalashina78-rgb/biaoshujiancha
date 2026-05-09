@@ -97,7 +97,8 @@ export const CheckProgressPage: React.FC = () => {
     addLog('启动智能化评审引擎...', 'info');
     
     let currentStep = 0;
-    const totalSteps = 20; // total "ticks" for simulation
+    let lastItem = '';
+    const totalSteps = 20; 
     
     const interval = setInterval(() => {
       currentStep++;
@@ -109,7 +110,8 @@ export const CheckProgressPage: React.FC = () => {
         setStatus('extraction');
         const fileIndex = Math.min(Math.floor((currentStep - 1) / 1.5), MOCK_FILES.length - 1);
         const fileName = MOCK_FILES[fileIndex];
-        if (fileName !== currentProcessingItem) {
+        if (fileName !== lastItem) {
+          lastItem = fileName;
           setCurrentProcessingItem(fileName);
           addLog(`正在提取 [${fileName}] 中的关键信息要素...`, 'info');
         }
@@ -118,7 +120,8 @@ export const CheckProgressPage: React.FC = () => {
         setStatus('review');
         const pointIndex = Math.min(Math.floor((currentStep - 9) / 1.5), MOCK_POINTS.length - 1);
         const pointName = MOCK_POINTS[pointIndex];
-        if (pointName !== currentProcessingItem) {
+        if (pointName !== lastItem) {
+          lastItem = pointName;
           setCurrentProcessingItem(pointName);
           addLog(`正在对 [${pointName}] 进行深度符合性评审...`, 'info');
           if (pointIndex === 2) addLog('检测到一名关键人员社保记录不完整', 'warning');
@@ -126,7 +129,10 @@ export const CheckProgressPage: React.FC = () => {
         if (currentStep === 17) addLog('评分项逐项审核完成，正在汇总逻辑关系', 'success');
       } else {
         setStatus('reporting');
-        setCurrentProcessingItem('正在整理最终报告...');
+        if ('正在整理最终报告...' !== lastItem) {
+          lastItem = '正在整理最终报告...';
+          setCurrentProcessingItem('正在整理最终报告...');
+        }
         if (currentStep === 18) addLog('整理评审结论与优化建议...', 'info');
         if (currentStep === 20) addLog('评审任务圆满完成！', 'success');
       }
@@ -144,7 +150,7 @@ export const CheckProgressPage: React.FC = () => {
     }, 800);
 
     return () => clearInterval(interval);
-  }, [id, checkType, stage, navigate, currentProcessingItem]);
+  }, [id, checkType, stage, navigate]);
 
   if (!project) {
     return (

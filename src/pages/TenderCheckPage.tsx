@@ -24,7 +24,6 @@ export const TenderCheckPage: React.FC = () => {
             onCreateClick={() => setIsCreateModalOpen(true)} 
             onProjectClick={(project) => navigate(`/projects/${project.id}`)}
             viewMode="grid"
-            showCheckStatus={true}
           />
         </div>
 

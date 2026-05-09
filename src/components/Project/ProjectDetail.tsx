@@ -48,12 +48,12 @@ interface InfoFieldProps {
 }
 
 const InfoField: React.FC<InfoFieldProps> = ({ label, icon, children }) => (
-  <div className="flex flex-col gap-1">
+  <div className="flex flex-col gap-1.5">
     <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
       {icon}
       {label}
     </div>
-    <div className="text-sm font-semibold text-gray-900">{children}</div>
+    <div className="text-sm font-semibold text-gray-700">{children}</div>
   </div>
 );
 
@@ -70,15 +70,15 @@ const TenderFileCard: React.FC<TenderFileCardProps> = ({ file, typeLabel, icon, 
     return (
       <div 
         onClick={onUpload}
-        className="border border-dashed border-brand/40 bg-brand/5 rounded-xl p-3 flex items-center cursor-pointer hover:border-brand hover:bg-brand/10 transition-all group"
+        className="border border-dashed border-blue-200 bg-blue-50/30 rounded-xl p-4 flex items-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group"
       >
-        <div className="flex items-center gap-3 min-w-0 w-full">
-          <div className="w-10 h-10 rounded-lg bg-white border border-dashed border-brand/30 flex items-center justify-center shrink-0 text-brand group-hover:scale-105 transition-transform shadow-sm">
-            <UploadCloud size={18} />
+        <div className="flex items-center gap-4 min-w-0 w-full">
+          <div className="w-12 h-12 rounded-xl bg-white border border-dashed border-blue-200 flex items-center justify-center shrink-0 text-blue-500 group-hover:scale-105 transition-transform shadow-sm">
+            <UploadCloud size={20} />
           </div>
           <div className="min-w-0 flex flex-col">
-            <span className="text-sm font-bold text-brand truncate">点击上传{typeLabel}</span>
-            <span className="text-[11px] text-brand/60 mt-0.5 font-medium">支持 PDF / Excel</span>
+            <span className="text-[13px] font-bold text-blue-600 truncate">点击上传{typeLabel}</span>
+            <span className="text-[11px] text-blue-400 mt-1 font-medium">支持 PDF / Excel</span>
           </div>
         </div>
       </div>
@@ -86,41 +86,33 @@ const TenderFileCard: React.FC<TenderFileCardProps> = ({ file, typeLabel, icon, 
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between group hover:border-brand/30 hover:shadow-sm transition-all relative">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${typeLabel === '招标文件' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}`}>
+    <div className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between group hover:border-blue-200 hover:shadow-sm transition-all relative">
+      <div className="flex items-center gap-4 min-w-0">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${typeLabel === '招标文件' ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'}`}>
           {icon}
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-bold text-gray-900 truncate" title={file.name}>{file.name}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-bold text-gray-800 truncate" title={file.name}>{file.name}</span>
             {typeLabel === '招标文件' && <CheckCircle2 size={14} className="text-green-500 shrink-0" />}
           </div>
-          <div className="text-[11px] text-gray-500 mt-0.5 font-medium">
+          <div className="text-[11px] text-gray-400 mt-1 font-medium">
             {typeLabel} • {formatSize(file.size)}
           </div>
         </div>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
-        <button className="p-1.5 text-gray-400 hover:text-brand hover:bg-brand/10 rounded-md transition-colors" title="下载"><Download size={14}/></button>
-        <button 
-          className="p-1.5 text-gray-400 hover:text-brand hover:bg-brand/10 rounded-md transition-colors" 
-          title="替换"
-          onClick={onUpload}
-        >
-          <RefreshCw size={14}/>
-        </button>
+        <button className="p-2 text-gray-400 hover:text-brand hover:bg-brand/5 rounded-lg transition-colors" title="下载"><Download size={16}/></button>
         {onDelete && (
           <button 
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" 
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" 
             title="删除"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
           >
-            <Trash2 size={14}/>
-          </button>
+            <Trash2 size={16}/></button>
         )}
       </div>
     </div>
@@ -212,6 +204,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
   const { updateProject } = useStore();
   const controlFileInputRef = useRef<HTMLInputElement>(null);
   const tenderFileInputRef = useRef<HTMLInputElement>(null);
+  const manifestFileInputRef = useRef<HTMLInputElement>(null);
 
   // Mock Data Injection if not present
   const tenderFile = project.tenderFile || {
@@ -241,6 +234,19 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
         uploadTime: new Date()
       };
       updateProject(project.id, { tenderFile: newFile });
+    }
+  };
+
+  const handleManifestFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const newFile: ProjectFile = {
+        id: `f_manifest_${Date.now()}`,
+        name: file.name,
+        size: file.size,
+        uploadTime: new Date()
+      };
+      updateProject(project.id, { manifestFile: newFile });
     }
   };
 
@@ -330,384 +336,363 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
   const daysRemaining = getDaysRemaining(project.deadline);
   const isUrgent = daysRemaining !== null && daysRemaining <= 3 && daysRemaining >= 0;
 
-  // Status Badge Helper
-  const getStatusBadge = (status: ProjectStatus) => {
-    const styles = {
-      [ProjectStatus.CREATED]: 'bg-gray-100 text-gray-600',
-      [ProjectStatus.IN_PROGRESS]: 'bg-blue-50 text-brand border border-blue-100',
-      [ProjectStatus.CHECKING]: 'bg-orange-50 text-orange-600 border border-orange-100',
-      [ProjectStatus.SUBMITTED]: 'bg-green-50 text-green-600 border border-green-100',
-      [ProjectStatus.OPENED]: 'bg-purple-50 text-purple-600',
-      [ProjectStatus.WON]: 'bg-red-50 text-red-600 font-bold',
-      [ProjectStatus.LOST]: 'bg-gray-100 text-gray-400',
-    };
-    return (
-      <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles[status]}`}>
-        {status}
-      </span>
-    );
-  };
-
   return (
-    <div className="flex flex-col h-full w-full space-y-4">
+    <div className="flex flex-col h-full w-full space-y-6">
       {/* Top Banner */}
       <PageHeader
         title={project.name}
         onBack={onBack}
         description={
-          <div className="flex items-center gap-4 text-sm text-gray-600 font-medium">
-            {getStatusBadge(project.status)}
-            <div className="flex items-center gap-1.5">
-              <User size={14} className="text-gray-400"/> 
-              负责人: <span className="text-gray-900">{project.manager || '未指定'}</span>
+          <div className="flex items-center gap-4 text-xs mt-1">
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[11px] font-bold border border-blue-100">
+              标书制作中
+            </span>
+            <div className="flex items-center gap-1.5 text-gray-500">
+              <User size={14} className="text-gray-300"/> 
+              负责人: <span className="text-gray-700 font-medium">{project.manager || '张建国'}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Briefcase size={14} className="text-gray-400"/> 
-              项目编号: <span className="text-gray-900">{project.id.toUpperCase()}</span>
+            <div className="flex items-center gap-1.5 text-gray-500">
+              <File size={14} className="text-gray-300"/> 
+              项目编号: <span className="text-gray-700 font-medium font-mono uppercase">{project.id.toUpperCase()}</span>
             </div>
           </div>
         }
         actions={
-          <Button variant="outline" size="sm" className="gap-2 bg-white shadow-sm">
+          <Button variant="outline" size="sm" className="gap-2 bg-white border-gray-200 text-gray-600 rounded-lg shadow-sm px-4">
             <Edit2 size={14} /> 编辑项目信息
           </Button>
         }
         className="px-0 py-2 shrink-0"
       />
 
-      {/* Basic Info Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-[214px] shrink-0">
-        {/* Content Split */}
-        <div className="flex flex-col md:flex-row h-full">
-          {/* Left: Basic Info Grid */}
-          <div className="flex-1 p-5 grid grid-cols-2 gap-x-8 gap-y-5">
-            <InfoField label="招标人" icon={<Building2 size={14} />}>{project.tenderer || '-'}</InfoField>
-            <InfoField label="项目类型" icon={<Briefcase size={14} />}>{project.type}</InfoField>
-            <InfoField label="联系人" icon={<User size={14} />}>{project.contactPerson || '-'}</InfoField>
-            <InfoField label="联系方式" icon={<Phone size={14} />}>{project.contactPhone || '-'}</InfoField>
-            <InfoField label="投标截止" icon={<Clock size={14} />}>
-              <div className={`flex items-center gap-2 ${isUrgent ? 'text-red-600 font-bold' : 'text-gray-900'}`}>
-                {formatDate(project.deadline)}
-                {daysRemaining !== null && daysRemaining >= 0 && (
-                  <span className={`text-xs px-2 py-0.5 rounded-md font-bold ${isUrgent ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-                    剩 {daysRemaining} 天
-                  </span>
-                )}
-              </div>
-            </InfoField>
-            <InfoField label="开标时间" icon={<Calendar size={14} />}>
-              <div className="text-gray-900">
-                {formatDate(project.openingDate)}
-              </div>
-            </InfoField>
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Left Column: Info + Versions */}
+        <div className="flex-1 space-y-6">
+          {/* Basic Info Card */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+              <InfoField label="招标人" icon={<Building2 size={14} />}>{project.tenderer || '上海浦东开发集团'}</InfoField>
+              <InfoField label="项目类型" icon={<Briefcase size={14} />}>{project.type || '工程类'}</InfoField>
+              <InfoField label="联系人" icon={<User size={14} />}>{project.contactPerson || '王经理'}</InfoField>
+              <InfoField label="联系方式" icon={<Phone size={14} />}>{project.contactPhone || '13800138000'}</InfoField>
+              <InfoField label="投标截止" icon={<Clock size={14} />}>
+                <div className="flex items-center gap-3">
+                  <span className="text-red-500 font-bold">{formatDate(project.deadline)}</span>
+                  {daysRemaining !== null && daysRemaining >= 0 && (
+                    <span className="px-2 py-0.5 bg-red-50 text-red-500 rounded text-[11px] font-bold border border-red-100">
+                      剩 {daysRemaining} 天
+                    </span>
+                  )}
+                </div>
+              </InfoField>
+              <InfoField label="开标时间" icon={<Calendar size={14} />}>
+                <div className="text-gray-700 font-semibold">
+                  {formatDate(project.openingDate)}
+                </div>
+              </InfoField>
+            </div>
           </div>
 
-          {/* Right: Files Panel */}
-          <div className="w-full md:w-80 bg-gray-50/50 border-l border-gray-100 p-5 flex flex-col">
-            <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Folder size={16} className="text-brand"/> 
-              招标相关文件
-            </h3>
-            <div className="space-y-2.5 flex-1">
-              <input 
-                type="file" 
-                ref={tenderFileInputRef} 
-                className="hidden" 
-                onChange={handleTenderFileUpload}
-                accept=".pdf,.doc,.docx,.xls,.xlsx"
-              />
-              <input 
-                type="file" 
-                ref={controlFileInputRef} 
-                className="hidden" 
-                onChange={handleControlFileUpload}
-                accept=".pdf,.doc,.docx,.xls,.xlsx"
-              />
-              <TenderFileCard 
-                file={tenderFile} 
-                typeLabel="招标文件" 
-                icon={<FileText size={20} />} 
-                onUpload={() => tenderFileInputRef.current?.click()}
-              />
-              <TenderFileCard 
-                file={project.controlFile} 
-                typeLabel="控制价文件" 
-                icon={<FileText size={20} />} 
-                onUpload={() => controlFileInputRef.current?.click()}
-                onDelete={() => updateProject(project.id, { controlFile: undefined })}
-              />
+          {/* 2. File Management Area (Versions) - Now inside left col */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-6 flex items-center justify-between border-b border-gray-50 bg-gray-50/10">
+               <h2 className="text-lg font-bold text-gray-800">投标文件版本</h2>
+               <div className="flex gap-3">
+                 <Button 
+                   size="sm" 
+                   variant="outline" 
+                   className="h-9 px-4 gap-2 border-gray-200 text-gray-600 rounded-lg hover:border-blue-200 hover:text-blue-600 transition-all font-bold"
+                   onClick={() => setIsAddVersionModalOpen(true)}
+                 >
+                   <Plus size={16} /> 添加版本
+                 </Button>
+                 <Button 
+                   size="sm" 
+                   variant="outline" 
+                   className="h-9 px-4 gap-2 border-gray-200 text-gray-600 rounded-lg font-bold"
+                   onClick={() => setShowTempModal(true)}
+                 >
+                   临时按钮
+                 </Button>
+                 <Button 
+                   size="sm" 
+                   className="h-9 px-4 gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-lg shadow-sm font-bold"
+                   onClick={() => {
+                     setUnifiedCheckModalVersions(versions);
+                     setInitialCheckType('credit');
+                   }}
+                 >
+                   <CheckCircle2 size={16} /> 全部检查
+                 </Button>
+               </div>
             </div>
+              
+            <div className="p-6">
+              <div className="space-y-4">
+                {versions.length === 0 && (
+                  <div className="text-center py-16 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                    <p className="text-sm text-gray-400">暂无投标文件版本</p>
+                    <button 
+                      onClick={() => setIsAddVersionModalOpen(true)}
+                      className="mt-4 text-xs font-bold text-blue-600 hover:underline"
+                    >
+                      立即上传第一个版本
+                    </button>
+                  </div>
+                )}
+                
+                {versions.map((version) => {
+                  const isExpanded = expandedVersions.includes(version.id);
+                  
+                  // Clean Badge style matching image
+                  const renderCheckBadge = (label: string, status: CheckStatus) => {
+                    const badgeStyle = {
+                      success: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-100', icon: <CheckCircle2 size={14} className="text-green-500" /> },
+                      warning: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-100', icon: <AlertCircle size={14} className="text-orange-500" /> },
+                      processing: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100', icon: <Loader2 size={14} className="text-blue-500 animate-spin" /> },
+                      pending: { bg: 'bg-gray-50', text: 'text-gray-400', border: 'border-gray-100', icon: <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-200" /> }
+                    }[status.status];
+
+                    return (
+                      <div 
+                        key={label}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (label === '技术') navigate(`/projects/${project.id}/check-result?type=technical`);
+                          else if (label === '资信') navigate(`/projects/${project.id}/check-result?type=credit`);
+                          else if (label === '经济') navigate(`/projects/${project.id}/check-result?type=economic`);
+                        }}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all cursor-pointer hover:shadow-md active:scale-95",
+                          badgeStyle.bg, badgeStyle.text, badgeStyle.border
+                        )}
+                      >
+                        {badgeStyle.icon}
+                        <span className="text-[11px] font-bold tracking-wide">{label}</span>
+                      </div>
+                    );
+                  };
+
+                  return (
+                    <div key={version.id} className="group">
+                      <div 
+                        className={cn(
+                          "flex flex-col md:flex-row md:items-center gap-4 md:gap-6 px-6 py-5 rounded-2xl border transition-all cursor-pointer",
+                          isExpanded ? "border-blue-200 bg-blue-50/5 shadow-sm" : "border-gray-50 bg-gray-50/30 hover:bg-white hover:border-gray-200 hover:shadow-sm"
+                        )}
+                        onClick={() => toggleVersion(version.id)}
+                      >
+                        {/* Version Main Info */}
+                        <div className="flex-1 min-w-0 md:pr-4">
+                          <h4 className="text-[15px] font-bold text-gray-800 mb-1.5 flex items-center gap-2">
+                            {version.name}
+                            {version.id === 'v4' && <span className="px-1.5 py-0.5 bg-brand/10 text-brand text-[10px] rounded">最新</span>}
+                          </h4>
+                          <div className="flex items-center gap-3 text-xs text-gray-400 font-medium">
+                            <span className="font-mono">{formatDate(version.uploadTime)}</span>
+                            {version.remark && (
+                              <>
+                                <span className="w-1 h-1 rounded-full bg-gray-200"></span>
+                                <span className="truncate">{version.remark}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Reference Info */}
+                        <div className="hidden md:block w-48 px-6 border-l border-gray-100 shrink-0">
+                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block mb-1">检查依据</span>
+                          <span className="text-[12px] font-bold text-gray-500 truncate block">
+                            {version.referenceDocName || '招标文件 V1.0'}
+                          </span>
+                        </div>
+
+                        {/* Status Badges */}
+                        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                          {renderCheckBadge('资信', version.checkStatus.credit)}
+                          {renderCheckBadge('技术', version.checkStatus.technical)}
+                          {renderCheckBadge('经济', version.checkStatus.economic)}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-3 shrink-0 md:ml-4">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-8 px-4 rounded-lg bg-white border-gray-200 text-gray-700 hover:text-blue-600 hover:border-blue-200 shadow-sm text-xs font-bold transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUnifiedCheckModalVersions([version]);
+                              setInitialCheckType('credit');
+                            }}
+                          >
+                            开始检查
+                          </Button>
+                          
+                          <div className="relative">
+                            <button 
+                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-gray-400 transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId(activeMenuId === version.id ? null : version.id);
+                              }}
+                            >
+                              <MoreHorizontal size={18}/>
+                            </button>
+                            {activeMenuId === version.id && (
+                              <>
+                                <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); }} />
+                                <div className="absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-xl border border-gray-100 z-20 py-1.5 animate-in fade-in zoom-in-95 duration-100">
+                                  <button 
+                                    className="w-full text-left px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-brand transition-colors flex items-center gap-2"
+                                    onClick={(e) => { e.stopPropagation(); handleEditRemark(version.id, version.remark); }}
+                                  >
+                                    <Edit2 size={14} /> 修改备注
+                                  </button>
+                                  <button 
+                                    className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteVersion(version.id); }}
+                                  >
+                                    <Trash2 size={14} /> 删除版本
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          <ChevronRight size={18} className={cn("text-gray-300 transition-transform hidden sm:block", isExpanded && "rotate-90 text-blue-400")} />
+                        </div>
+                      </div>
+
+                      {/* Expansion Area */}
+                      {isExpanded && (
+                        <div className="mt-3 mx-2 bg-white rounded-2xl border border-blue-100/50 shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-3 duration-300">
+                           <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-100">
+                                  <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">文件名称</th>
+                                  <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-24">大小</th>
+                                  <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-64">所属分类 (可多选)</th>
+                                  <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-44">上传时间</th>
+                                  <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right w-24">操作</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-50">
+                                {version.files.map((file) => (
+                                  <tr key={file.id} className="hover:bg-gray-50/30 transition-colors group/row">
+                                    <td className="px-6 py-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover/row:bg-blue-50 group-hover/row:text-blue-500 transition-colors">
+                                          <FileText size={16} />
+                                        </div>
+                                        <span className="text-[13px] font-bold text-gray-700">{file.name}</span>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-xs text-gray-500 font-mono">{formatSize(file.size)}</td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {['资信标', '技术标', '经济标'].map(cat => (
+                                          <button 
+                                            key={cat}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleToggleFileCategory(version.id, file.id, cat);
+                                            }}
+                                            className={cn(
+                                              "px-2.5 py-1 rounded-md text-[10px] font-bold border transition-all",
+                                              file.categories?.includes(cat)
+                                                ? "bg-blue-50 border-blue-200 text-blue-600 shadow-sm"
+                                                : "bg-white border-gray-100 text-gray-400 hover:border-gray-300"
+                                            )}
+                                          >
+                                            {cat}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-xs text-gray-400">{formatDate(file.uploadTime)}</td>
+                                    <td className="px-6 py-4 text-right">
+                                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                                        <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all" title="预览"><Eye size={16} /></button>
+                                        <button className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="下载"><Download size={16} /></button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right: Files Sidebar */}
+        <div className="w-full lg:w-[340px] bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col">
+          <h3 className="text-[14px] font-bold text-gray-800 mb-5 flex items-center gap-2">
+            <Folder size={18} className="text-blue-500"/> 
+            招标相关文件
+          </h3>
+          <div className="space-y-4">
+            <input 
+              type="file" 
+              ref={tenderFileInputRef} 
+              className="hidden" 
+              onChange={handleTenderFileUpload}
+              accept=".pdf,.doc,.docx,.xls,.xlsx"
+            />
+            <input 
+              type="file" 
+              ref={controlFileInputRef} 
+              className="hidden" 
+              onChange={handleControlFileUpload}
+              accept=".pdf,.doc,.docx,.xls,.xlsx"
+            />
+            <input 
+              type="file" 
+              ref={manifestFileInputRef} 
+              className="hidden" 
+              onChange={handleManifestFileUpload}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+            />
+            <TenderFileCard 
+              file={tenderFile} 
+              typeLabel="招标文件" 
+              icon={<FileText size={24} />} 
+              onUpload={() => tenderFileInputRef.current?.click()}
+            />
+            <TenderFileCard 
+              file={project.controlFile} 
+              typeLabel="控制价文件" 
+              icon={<FileText size={24} />} 
+              onUpload={() => controlFileInputRef.current?.click()}
+              onDelete={() => updateProject(project.id, { controlFile: undefined })}
+            />
+            <TenderFileCard 
+              file={project.manifestFile} 
+              typeLabel="招标清单文件" 
+              icon={<FileText size={24} className="text-orange-500" />} 
+              onUpload={() => manifestFileInputRef.current?.click()}
+              onDelete={() => updateProject(project.id, { manifestFile: undefined })}
+            />
           </div>
         </div>
       </div>
 
-      {/* 2. File Management */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 shrink-0">
-        <div className="flex items-center justify-between mb-4">
-           <h2 className="text-lg font-bold text-text-primary">投标文件版本</h2>
-           <div className="flex gap-2">
-             <Button 
-               size="sm" 
-               variant="outline" 
-               className="h-8 gap-1"
-               onClick={() => setIsAddVersionModalOpen(true)}
-             >
-               <Plus size={14} /> 添加版本
-             </Button>
-             <Button 
-               size="sm" 
-               variant="outline" 
-               className="h-8 gap-1 text-gray-500 border-gray-200"
-               onClick={() => setShowTempModal(true)}
-             >
-               临时按钮
-             </Button>
-             <Button 
-               size="sm" 
-               variant="primary" 
-               className="h-8 gap-1"
-               onClick={() => {
-                 setUnifiedCheckModalVersions(versions);
-                 setInitialCheckType('credit');
-               }}
-             >
-               <CheckCircle size={14} /> 全部检查
-             </Button>
-           </div>
-        </div>
-          
-          <div className="space-y-3">
-            {versions.length === 0 && (
-              <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                <p className="text-sm text-text-tertiary">暂无投标文件版本</p>
-                <p className="text-xs text-gray-400 mt-1">可以添加多个版本用于对比分析或保存历史记录</p>
-              </div>
-            )}
-            
-            {versions.map((version) => {
-              const isExpanded = expandedVersions.includes(version.id);
-              
-              // Helper to render individual check status (matching homepage style)
-              const renderCheckBadge = (label: string, status: CheckStatus) => {
-                const icons = {
-                  success: <CheckCircle size={14} className="text-functional-success" />,
-                  warning: <AlertTriangle size={14} className="text-functional-warning" />,
-                  processing: <Loader2 size={14} className="text-brand animate-spin" />,
-                  pending: <div className="w-3.5 h-3.5 rounded-full border border-gray-300" />
-                };
-
-                const isChecked = status.status === 'success' || status.status === 'warning';
-                const isProcessing = status.status === 'processing';
-                const buttonText = isChecked ? '查看' : (isProcessing ? '进行中' : '检查');
-                
-                return (
-                  <div 
-                    className="flex items-center justify-center min-w-[64px] h-7 px-2 rounded-md transition-all hover:bg-brand hover:text-white group cursor-pointer border border-gray-200 bg-white" 
-                    title={`${label}: ${status.status}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (label === '技术' && status.status === 'pending') {
-                        setUnifiedCheckModalVersions([version]);
-                        setInitialCheckType('technical');
-                      } else if (label === '技术' && (status.status === 'success' || status.status === 'warning')) {
-                        navigate(`/projects/${project.id}/check-result?type=technical`);
-                      } else if (label === '资信' && status.status === 'pending') {
-                        setUnifiedCheckModalVersions([version]);
-                        setInitialCheckType('credit');
-                      } else if (label === '资信' && (status.status === 'success' || status.status === 'warning')) {
-                        navigate(`/projects/${project.id}/check-result?type=credit`);
-                      } else if (label === '经济' && status.status === 'pending') {
-                        setUnifiedCheckModalVersions([version]);
-                        setInitialCheckType('economic');
-                      } else if (label === '经济' && (status.status === 'success' || status.status === 'warning')) {
-                        navigate(`/projects/${project.id}/check-result?type=economic`);
-                      } else {
-                        console.log(`Action: ${buttonText} for ${label}`);
-                      }
-                    }}
-                  >
-                    {/* Normal State */}
-                    <div className="flex items-center gap-1.5 group-hover:hidden">
-                      {icons[status.status]}
-                      <span className="text-xs text-text-tertiary">{label}</span>
-                    </div>
-                    
-                    {/* Hover State */}
-                    <div className="hidden group-hover:flex items-center gap-1">
-                      <span className="text-[11px] font-bold">{buttonText}</span>
-                    </div>
-                  </div>
-                );
-              };
-
-              return (
-                <div key={version.id} className="border border-blue-100 rounded-lg transition-all duration-300 bg-white">
-                  {/* Header Row */}
-                  <div 
-                    className={`bg-blue-50/40 px-4 py-3 flex items-center gap-4 justify-between cursor-pointer hover:bg-blue-50/80 transition-colors rounded-t-lg ${!isExpanded ? 'rounded-b-lg' : 'border-b border-blue-100'}`}
-                    onClick={() => toggleVersion(version.id)}
-                  >
-
-                    {/* Group 1: Name + Remark + Date */}
-                    <div className="flex-1 flex flex-col min-w-0 pr-4 gap-1">
-                       <span className="text-sm font-bold text-gray-900 truncate">{version.name}</span>
-                       <div className="flex items-center text-xs text-gray-500">
-                         <span className="font-mono text-gray-400 shrink-0">{formatDate(version.uploadTime)}</span>
-                         {version.remark && (
-                           <>
-                             <span className="w-px h-3 bg-gray-300 mx-2 shrink-0"></span>
-                             <span className="truncate max-w-[300px]">{version.remark}</span>
-                           </>
-                         )}
-                       </div>
-                    </div>
-
-                    {/* Group: Reference Doc Info */}
-                    <div className="flex flex-col items-start justify-center w-48 px-4 border-l border-gray-100 shrink-0">
-                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">检查依据</span>
-                       <span className="text-[11px] font-semibold text-gray-600 truncate w-full" title={version.referenceDocName}>
-                         {version.referenceDocName || '招标文件 V1.0'}
-                       </span>
-                    </div>
-
-                    {/* Group 2: Status Summary */}
-                    <div className="flex items-center gap-2 text-xs shrink-0">
-                         {renderCheckBadge('资信', version.checkStatus.credit)}
-                         {renderCheckBadge('技术', version.checkStatus.technical)}
-                         {renderCheckBadge('经济', version.checkStatus.economic)}
-                    </div>
-
-                    {/* Group 3: Action Buttons */}
-                    <div className="flex items-center gap-2 shrink-0 ml-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-7 px-3 text-[11px] text-brand border-brand hover:bg-brand/5 bg-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUnifiedCheckModalVersions([version]);
-                          setInitialCheckType('credit');
-                        }}
-                      >
-                        开始检查
-                      </Button>
-                      
-                      <div className="relative">
-                          <button 
-                            className="h-7 w-7 flex items-center justify-center rounded-md bg-blue-100/50 text-blue-600 hover:bg-blue-100 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveMenuId(activeMenuId === version.id ? null : version.id);
-                            }}
-                          >
-                            <MoreHorizontal size={14}/>
-                          </button>
-                          {activeMenuId === version.id && (
-                            <>
-                              <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); }} />
-                              <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-100 z-20 py-1">
-                                <button 
-                                  className="w-full text-left px-4 py-2 text-xs text-gray-600 hover:bg-gray-50 hover:text-brand transition-colors"
-                                  onClick={(e) => { e.stopPropagation(); handleEditRemark(version.id, version.remark); }}
-                                >
-                                  修改备注
-                                </button>
-                                <button 
-                                  className="w-full text-left px-4 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteVersion(version.id); }}
-                                >
-                                  删除版本
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                        <button className="p-1 hover:bg-blue-100 rounded-md text-gray-400 hover:text-gray-600 transition-colors ml-1">
-                          {isExpanded ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Body */}
-                    {isExpanded && (
-                    <div className="bg-white animate-in slide-in-from-top-2 duration-200 rounded-b-lg overflow-hidden">
-                      <div className="mb-0">
-                        {version.files.length > 0 ? (
-                          <div className="divide-y divide-gray-100 border-y border-gray-100">
-                            {/* File Table Header */}
-                            <div className="grid grid-cols-[1fr_80px_200px_150px_80px] gap-4 items-center px-[44px] py-1.5 bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                              <span>文件名称</span>
-                              <span>大小</span>
-                              <span>所属分类 (可多选)</span>
-                              <span>上传时间</span>
-                              <span className="text-right">操作</span>
-                            </div>
-
-                            {version.files.map((file) => (
-                              <div key={file.id} className="flex items-center justify-between px-4 py-2 bg-white group hover:bg-gray-50 transition-colors">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                  <FileText size={14} className="text-text-tertiary shrink-0" />
-                                  <div className="grid grid-cols-[1fr_80px_200px_150px] gap-4 items-center flex-1 min-w-0">
-                                    <span className="text-sm font-regular text-text-primary truncate" title={file.name}>{file.name}</span>
-                                    <span className="text-xs text-text-tertiary">{formatSize(file.size)}</span>
-                                    
-                                    {/* Category Multi-select */}
-                                    <div className="flex items-center gap-1.5">
-                                      {['资信标', '技术标', '经济标'].map(cat => (
-                                        <button 
-                                          key={cat}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleToggleFileCategory(version.id, file.id, cat);
-                                          }}
-                                          className={cn(
-                                            "px-2 py-0.5 rounded text-[10px] font-bold border transition-all",
-                                            file.categories?.includes(cat)
-                                              ? "bg-brand/10 border-brand/20 text-brand"
-                                              : "bg-gray-50 border-gray-100 text-gray-400 hover:border-gray-300 hover:text-gray-600"
-                                          )}
-                                        >
-                                          {cat}
-                                        </button>
-                                      ))}
-                                    </div>
-
-                                    <span className="text-xs text-gray-400 hidden sm:inline-block">{formatDate(file.uploadTime)}</span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-4 shrink-0">
-                                  <button className="p-1 text-gray-400 hover:text-brand hover:bg-white rounded transition-colors" title="预览">
-                                    <Eye size={14} />
-                                  </button>
-                                  <button className="p-1 text-gray-400 hover:text-red-500 hover:bg-white rounded transition-colors" title="删除">
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-6 text-gray-400 text-sm border-y border-gray-100 bg-gray-50/30">
-                            该版本暂无文件
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-      <div className="h-10"></div>
+      <div className="h-12"></div>
       
       {/* Modals */}
       <AddVersionModal 
         isOpen={isAddVersionModalOpen}
         onClose={() => setIsAddVersionModalOpen(false)}
         onImport={handleImportVersions}
-        suggestedVersionName={`V${(project?.versions?.length || 0) + 1}.0`}
+        suggestedVersionName={`V${(versions.length || 0) + 1}.0`}
       />
       <UnifiedCheckConfirmModal
         isOpen={unifiedCheckModalVersions.length > 0}
@@ -727,10 +712,10 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
       {/* Temporary Modal */}
       {showTempModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowTempModal(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 overflow-hidden text-center">
-            <div className="w-16 h-16 bg-brand/5 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Loader2 size={32} className="text-brand animate-spin" />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowTempModal(false)} />
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 overflow-hidden text-center animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Loader2 size={32} className="text-blue-500 animate-spin" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">功能开发中</h3>
             <p className="text-sm text-gray-500 mb-8 leading-relaxed">
@@ -738,7 +723,7 @@ export const ProjectDetail: React.FC<ProjectDetailProps> = ({ project, onBack })
             </p>
             <Button 
               variant="primary" 
-              className="w-full" 
+              className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200" 
               onClick={() => setShowTempModal(false)}
             >
               我知道了

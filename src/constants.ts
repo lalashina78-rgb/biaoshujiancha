@@ -30,7 +30,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: 'n3',
     title: '系统更新通知',
-    content: 'TenderCheck Pro 已更新至 v1.2.0，新增了“智能资信核验”功能，欢迎体验。',
+    content: '标桥·AI标书检查 已更新至 v1.2.0，新增了“智能资信核验”功能，欢迎体验。',
     timestamp: getRelativeDate(-2, 10, 0),
     isRead: false,
     type: NotificationType.SYSTEM

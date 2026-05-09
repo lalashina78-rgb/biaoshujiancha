@@ -82,6 +82,7 @@ export interface Project {
   // Extended details
   tenderFile?: ProjectFile;
   controlFile?: ProjectFile;
+  manifestFile?: ProjectFile;
   versions?: ProposalVersion[];
 }
 

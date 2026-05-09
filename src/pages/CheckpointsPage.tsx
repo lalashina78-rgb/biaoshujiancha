@@ -23,6 +23,7 @@ interface Checkpoint {
   location: string;
   isMandatory: boolean;
   group: string;
+  isCustom?: boolean;
 }
 
 const MOCK_CHECKPOINTS: Record<string, Checkpoint[]> = {
@@ -156,11 +157,12 @@ export const CheckpointsPage: React.FC = () => {
   const handleAdd = (group: string) => {
     const newCp: Checkpoint = {
       id: Date.now().toString(),
-      name: '新检查点',
+      name: '新评分点',
       requirement: '请输入检查要求',
       location: '手动添加',
       isMandatory: false,
-      group: group
+      group: group,
+      isCustom: true
     };
     setCheckpoints(prev => ({
       ...prev,
@@ -404,19 +406,29 @@ export const CheckpointsPage: React.FC = () => {
           <div className="px-6 pt-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex gap-1">
               {[
-                { id: 'credit', label: '资信标' },
-                { id: 'technical', label: '技术标' },
-                { id: 'economic', label: '经济标' }
+                { id: 'credit', label: '资信标', disabled: false },
+                { id: 'technical', label: '技术标', disabled: false },
+                { id: 'economic', label: '经济标', disabled: true }
               ].map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => !tab.disabled && setActiveTab(tab.id)}
+                  disabled={tab.disabled}
                   className={cn(
-                    "px-6 py-3 text-sm font-bold transition-all border-b-2",
-                    activeTab === tab.id ? "text-brand border-brand" : "text-gray-400 border-transparent hover:text-gray-600"
+                    "px-6 py-3 text-sm font-bold transition-all border-b-2 flex items-center gap-2",
+                    tab.disabled 
+                      ? "text-gray-300 border-transparent cursor-not-allowed" 
+                      : activeTab === tab.id 
+                        ? "text-brand border-brand" 
+                        : "text-gray-400 border-transparent hover:text-gray-600"
                   )}
                 >
                   {tab.label}
+                  {tab.disabled && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 font-bold tracking-tighter">
+                      敬请期待
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -457,7 +469,7 @@ export const CheckpointsPage: React.FC = () => {
                       className="flex items-center gap-1 px-2 py-1 text-brand hover:bg-brand/5 rounded transition-all opacity-0 group-hover/header:opacity-100"
                     >
                       <Plus size={12} />
-                      <span className="text-[10px] font-bold">新增检查点</span>
+                      <span className="text-[10px] font-bold">新增评分点</span>
                     </button>
                   </div>
                   <div className="space-y-3">
@@ -478,9 +490,9 @@ export const CheckpointsPage: React.FC = () => {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 space-y-2">
                             <div className="flex items-center gap-2">
-                              {cp.isMandatory && (
-                                <span className="px-1.5 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded border border-red-100">
-                                  否决
+                              {cp.isCustom && (
+                                <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded border border-blue-100">
+                                  手动创建
                                 </span>
                               )}
                               <h4 className="text-sm font-bold text-gray-900">{cp.name}</h4>
@@ -567,7 +579,7 @@ export const CheckpointsPage: React.FC = () => {
               <h3 className="text-lg font-bold">重新解析确认</h3>
             </div>
             <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-              重新解析将覆盖当前所有手动修改和新增的检查点，恢复到系统最初提取的状态。此操作不可撤销，是否确认？
+              重新解析将覆盖当前所有手动修改和新增的评分点，恢复到系统最初提取的状态。此操作不可撤销，是否确认？
             </p>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowReParseModal(false)}>取消</Button>

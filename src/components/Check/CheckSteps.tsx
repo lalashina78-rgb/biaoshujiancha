@@ -15,7 +15,7 @@ interface CheckStepsProps {
 
 const STEPS = [
   { id: 1, label: '确认文件' },
-  { id: 2, label: '查看检查点' },
+  { id: 2, label: '查看评分点' },
   { id: 3, label: '查看结果' },
 ];
 
