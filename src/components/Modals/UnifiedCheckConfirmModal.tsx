@@ -3,6 +3,8 @@ import { X, Info, Zap, FileCheck, SlidersHorizontal, CheckCircle2, CheckSquare, 
 import { Project, ProposalVersion, ProjectFile } from '../../types';
 import { Button } from '../UI/Button';
 import { cn } from '../../utils/cn';
+import { PaymentModal } from './PaymentModal';
+import { CheckConfirmModal } from './CheckConfirmModal';
 
 const formatSize = (bytes: number) => {
   if (bytes === 0) return '0 B';
@@ -42,6 +44,8 @@ export const UnifiedCheckConfirmModal: React.FC<UnifiedCheckConfirmModalProps> =
 }) => {
   const [selectedCheckTypes, setSelectedCheckTypes] = useState<string[]>([]);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isConsumptionModalOpen, setIsConsumptionModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -59,6 +63,7 @@ export const UnifiedCheckConfirmModal: React.FC<UnifiedCheckConfirmModalProps> =
         v.files.filter(f => f.categories?.some(cat => activeCategories.includes(cat))).map(f => f.id)
       );
       setSelectedFileIds(fileIdsToSelect);
+      setIsPaymentModalOpen(false); // Reset payment modal
     }
   }, [isOpen, initialCheckType, versions]);
 
@@ -119,6 +124,17 @@ export const UnifiedCheckConfirmModal: React.FC<UnifiedCheckConfirmModalProps> =
   };
 
   const handleConfirm = () => {
+    // Instead of confirming directly, show payment modal
+    setIsPaymentModalOpen(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setIsPaymentModalOpen(false);
+    setIsConsumptionModalOpen(true); // Open consumption confirmation next
+  };
+
+  const handleConsumptionConfirm = () => {
+    setIsConsumptionModalOpen(false);
     onConfirm(selectedFileIds, selectedCheckTypes);
   };
 
@@ -340,6 +356,18 @@ export const UnifiedCheckConfirmModal: React.FC<UnifiedCheckConfirmModalProps> =
           </div>
         </div>
       </div>
+
+      <PaymentModal 
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSuccess={handlePaymentSuccess}
+      />
+
+      <CheckConfirmModal
+        isOpen={isConsumptionModalOpen}
+        onClose={() => setIsConsumptionModalOpen(false)}
+        onConfirm={handleConsumptionConfirm}
+      />
     </div>
   );
 };
